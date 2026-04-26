@@ -1,0 +1,22 @@
+:root {
+}
+
+.btn-container {
+    justify-content: center;
+    align-items: stretch;
+    align-self: flex-start;
+    -unity-background-image-tint-color: rgb(0, 0, 0);
+    flex-grow: 1;
+    column-gap: 90px;
+    width: 40%;
+    align-content: center;
+    flex-shrink: 1;
+}
+
+.btn-style {
+    margin-top: 5%;
+    margin-right: 5%;
+    margin-bottom: 5%;
+    margin-left: 5%;
+    top: 15%;
+}

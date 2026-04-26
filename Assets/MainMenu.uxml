@@ -1,0 +1,8 @@
+<ui:UXML xmlns:ui="UnityEngine.UIElements" xmlns:uie="UnityEditor.UIElements" editor-extension-mode="False">
+    <Style src="project://database/Assets/ButtonsContainer.uss?fileID=7433441132597879392&amp;guid=f548c294864a2064b8232f47def61d55&amp;type=3#ButtonsContainer"/>
+    <ui:VisualElement name="Buttons" class="btn-container" style="flex-grow: 1;">
+        <ui:Button text="Button" name="StartGame" class="btn-style"/>
+        <ui:Button text="Button" name="Continue" class="btn-style"/>
+        <ui:Button text="Button" name="Exit" class="btn-style"/>
+    </ui:VisualElement>
+</ui:UXML>
