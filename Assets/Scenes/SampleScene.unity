@@ -337,7 +337,7 @@ TilemapRenderer:
   m_GlobalIlluminationMeshLod: 0
   m_SortingLayerID: 0
   m_SortingLayer: 0
-  m_SortingOrder: 0
+  m_SortingOrder: 1
   m_MaskInteraction: 0
   m_ChunkSize: {x: 32, y: 32, z: 32}
   m_ChunkCullingBounds: {x: 0, y: 0, z: 0}
@@ -1300,8 +1300,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::CaveGenerator
   _groundTilemap: {fileID: 578769225}
   _wallTilemap: {fileID: 119221988}
-  _groundTile: {fileID: 0}
-  _wallTile: {fileID: 0}
+  _groundTile: {fileID: 11400000, guid: 3733d96b1c62de540b9bb0b60bb78042, type: 2}
+  _wallTile: {fileID: 11400000, guid: c2557a75a635ded4bb977fec03a40f21, type: 2}
   _width: 80
   _height: 80
   _fillProbability: 0.55
