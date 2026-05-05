@@ -655,6 +655,15 @@ public partial class @PlayerActionsControl: IInputActionCollection2, IDisposable
                     ""processors"": """",
                     ""interactions"": """",
                     ""initialStateCheck"": false
+                },
+                {
+                    ""name"": ""OnPause"",
+                    ""type"": ""Button"",
+                    ""id"": ""a767b1e0-c60a-4faf-847f-bddb91d2bf26"",
+                    ""expectedControlType"": """",
+                    ""processors"": """",
+                    ""interactions"": """",
+                    ""initialStateCheck"": false
                 }
             ],
             ""bindings"": [
@@ -1075,6 +1084,17 @@ public partial class @PlayerActionsControl: IInputActionCollection2, IDisposable
                     ""action"": ""TrackedDeviceOrientation"",
                     ""isComposite"": false,
                     ""isPartOfComposite"": false
+                },
+                {
+                    ""name"": """",
+                    ""id"": ""2b6e2e24-17c0-4ac8-ac9c-af4337ebb5a2"",
+                    ""path"": ""<Keyboard>/escape"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": "";Keyboard&Mouse"",
+                    ""action"": ""OnPause"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": false
                 }
             ]
         }
@@ -1165,6 +1185,7 @@ public partial class @PlayerActionsControl: IInputActionCollection2, IDisposable
         m_UI_ScrollWheel = m_UI.FindAction("ScrollWheel", throwIfNotFound: true);
         m_UI_TrackedDevicePosition = m_UI.FindAction("TrackedDevicePosition", throwIfNotFound: true);
         m_UI_TrackedDeviceOrientation = m_UI.FindAction("TrackedDeviceOrientation", throwIfNotFound: true);
+        m_UI_OnPause = m_UI.FindAction("OnPause", throwIfNotFound: true);
     }
 
     ~@PlayerActionsControl()
@@ -1440,6 +1461,7 @@ public partial class @PlayerActionsControl: IInputActionCollection2, IDisposable
     private readonly InputAction m_UI_ScrollWheel;
     private readonly InputAction m_UI_TrackedDevicePosition;
     private readonly InputAction m_UI_TrackedDeviceOrientation;
+    private readonly InputAction m_UI_OnPause;
     /// <summary>
     /// Provides access to input actions defined in input action map "UI".
     /// </summary>
@@ -1491,6 +1513,10 @@ public partial class @PlayerActionsControl: IInputActionCollection2, IDisposable
         /// Provides access to the underlying input action "UI/TrackedDeviceOrientation".
         /// </summary>
         public InputAction @TrackedDeviceOrientation => m_Wrapper.m_UI_TrackedDeviceOrientation;
+        /// <summary>
+        /// Provides access to the underlying input action "UI/OnPause".
+        /// </summary>
+        public InputAction @OnPause => m_Wrapper.m_UI_OnPause;
         /// <summary>
         /// Provides access to the underlying input action map instance.
         /// </summary>
@@ -1547,6 +1573,9 @@ public partial class @PlayerActionsControl: IInputActionCollection2, IDisposable
             @TrackedDeviceOrientation.started += instance.OnTrackedDeviceOrientation;
             @TrackedDeviceOrientation.performed += instance.OnTrackedDeviceOrientation;
             @TrackedDeviceOrientation.canceled += instance.OnTrackedDeviceOrientation;
+            @OnPause.started += instance.OnOnPause;
+            @OnPause.performed += instance.OnOnPause;
+            @OnPause.canceled += instance.OnOnPause;
         }
 
         /// <summary>
@@ -1588,6 +1617,9 @@ public partial class @PlayerActionsControl: IInputActionCollection2, IDisposable
             @TrackedDeviceOrientation.started -= instance.OnTrackedDeviceOrientation;
             @TrackedDeviceOrientation.performed -= instance.OnTrackedDeviceOrientation;
             @TrackedDeviceOrientation.canceled -= instance.OnTrackedDeviceOrientation;
+            @OnPause.started -= instance.OnOnPause;
+            @OnPause.performed -= instance.OnOnPause;
+            @OnPause.canceled -= instance.OnOnPause;
         }
 
         /// <summary>
@@ -1834,5 +1866,12 @@ public partial class @PlayerActionsControl: IInputActionCollection2, IDisposable
         /// <seealso cref="UnityEngine.InputSystem.InputAction.performed" />
         /// <seealso cref="UnityEngine.InputSystem.InputAction.canceled" />
         void OnTrackedDeviceOrientation(InputAction.CallbackContext context);
+        /// <summary>
+        /// Method invoked when associated input action "OnPause" is either <see cref="UnityEngine.InputSystem.InputAction.started" />, <see cref="UnityEngine.InputSystem.InputAction.performed" /> or <see cref="UnityEngine.InputSystem.InputAction.canceled" />.
+        /// </summary>
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.started" />
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.performed" />
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.canceled" />
+        void OnOnPause(InputAction.CallbackContext context);
     }
 }
