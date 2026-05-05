@@ -13,9 +13,8 @@ public class BulletPool : MonoBehaviour
 
     private void Awake() 
     {
-        _inactiveBulletsPosition = new GameObject("BulletPool").transform;
+        _inactiveBulletsPosition = new GameObject("PoolContainer").transform;
         _inactiveBulletsPosition.SetParent(transform);
-        _inactiveBulletsPosition.gameObject.SetActive(false);
 
         PreWarm();
     }

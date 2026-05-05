@@ -372,9 +372,8 @@ GameObject:
   - component: {fileID: 209652656}
   - component: {fileID: 209652655}
   - component: {fileID: 209652658}
-  - component: {fileID: 209652659}
   m_Layer: 0
-  m_Name: Square (1)
+  m_Name: Player
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -497,24 +496,6 @@ MonoBehaviour:
   _health: 0
   _speed: 7
   _damage: 0
---- !u!114 &209652659
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 209652654}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 45d21524f49892945a5fb09fbee451ab, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::GunsBase
-  _bulletPool: {fileID: 411895430}
-  _muzzle: {fileID: 1545659092}
-  _bulletCount: 3
-  _firingSpread: 60
-  _firingRate: 100
-  _camera: {fileID: 0}
 --- !u!1 &265062106
 GameObject:
   m_ObjectHideFlags: 0
@@ -528,12 +509,12 @@ GameObject:
   - component: {fileID: 265062108}
   - component: {fileID: 265062107}
   m_Layer: 5
-  m_Name: Canvas
+  m_Name: PauseMenu
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!114 &265062107
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -622,6 +603,37 @@ RectTransform:
   m_AnchoredPosition: {x: 0, y: 0}
   m_SizeDelta: {x: 0, y: 0}
   m_Pivot: {x: 0, y: 0}
+--- !u!1 &404513114
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 404513115}
+  m_Layer: 0
+  m_Name: Muzzle
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &404513115
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 404513114}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: -0, y: 0.59, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 1545659092}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &411895429
 GameObject:
   m_ObjectHideFlags: 0
@@ -652,7 +664,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::BulletPool
   _bullet: {fileID: 9146929355756376195, guid: 4748e9dab7dc4584bbb2ce0b96d2fd69, type: 3}
-  _initialCount: 2
+  _initialCount: 100
 --- !u!4 &411895431
 Transform:
   m_ObjectHideFlags: 0
@@ -1561,7 +1573,7 @@ GameObject:
   - component: {fileID: 1545659094}
   - component: {fileID: 1545659093}
   m_Layer: 0
-  m_Name: Triangle
+  m_Name: Gun
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -1579,7 +1591,8 @@ Transform:
   m_LocalPosition: {x: 0.708, y: 0, z: 0}
   m_LocalScale: {x: 0.5, y: 0.5, z: 1}
   m_ConstrainProportionsScale: 0
-  m_Children: []
+  m_Children:
+  - {fileID: 404513115}
   m_Father: {fileID: 209652657}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 270}
 --- !u!114 &1545659093
@@ -1595,11 +1608,13 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::GunsBase
   _bulletPool: {fileID: 411895430}
-  _muzzle: {fileID: 1545659092}
-  _bulletCount: 2
+  _muzzle: {fileID: 404513115}
+  _damage: 10
+  _bulletCount: 3
+  _firingRate: 5
   _firingSpread: 60
-  _firingRate: 50
   _camera: {fileID: 519420031}
+  _spriteAngleOffset: 270
 --- !u!212 &1545659094
 SpriteRenderer:
   serializedVersion: 2
@@ -1743,6 +1758,7 @@ GameObject:
   - component: {fileID: 1671992963}
   - component: {fileID: 1671992962}
   - component: {fileID: 1671992961}
+  - component: {fileID: 1671992964}
   m_Layer: 5
   m_Name: Button (2)
   m_TagString: Untagged
@@ -1814,9 +1830,9 @@ MonoBehaviour:
   m_OnClick:
     m_PersistentCalls:
       m_Calls:
-      - m_Target: {fileID: 58308042}
+      - m_Target: {fileID: 0}
         m_TargetAssemblyTypeName: PauseMenu, Assembly-CSharp
-        m_MethodName: OnMainMenu
+        m_MethodName: 
         m_Mode: 1
         m_Arguments:
           m_ObjectArgument: {fileID: 0}
@@ -1864,6 +1880,19 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1671992959}
   m_CullTransparentMesh: 1
+--- !u!114 &1671992964
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1671992959}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 079d0c2c00b559045999eaae576cc041, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::ChangeScene
+  sceneName: MainMenu
 --- !u!1 &1788678439
 GameObject:
   m_ObjectHideFlags: 0

@@ -11,7 +11,6 @@ public abstract class UnitsBase : MonoBehaviour
 
     protected abstract void Awake();
 
-
     protected virtual void onObjectDeath()
     {
         Destroy(gameObject);
