@@ -1,0 +1,88 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!1 &7763992997302134896
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 403568401010938519}
+  - component: {fileID: 183172305927055860}
+  m_Layer: 0
+  m_Name: WaveSpawner
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &403568401010938519
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7763992997302134896}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: -3.16377, y: 1.88625, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &183172305927055860
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7763992997302134896}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 1f34bc4bbfa3b7c4fa81d9077ae486b7, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::WaveSpawner
+  _waves:
+  - name: Probe
+    groups:
+    - enemyPrefab: {fileID: 1443498329689020134, guid: e719263cb10fbb3459a2432240ad495b, type: 3}
+      count: 8
+      spawnInterval: 1
+      burstSize: 1
+    waitForClear: 0
+  - name: Pressure
+    groups:
+    - enemyPrefab: {fileID: 1443498329689020134, guid: e719263cb10fbb3459a2432240ad495b, type: 3}
+      count: 15
+      spawnInterval: 0.7
+      burstSize: 2
+    waitForClear: 0
+  - name: Pack
+    groups:
+    - enemyPrefab: {fileID: 6225669282712092493, guid: 096a80c1973562d4b92fabd2050d09e0, type: 3}
+      count: 8
+      spawnInterval: 1.5
+      burstSize: 1
+    - enemyPrefab: {fileID: 1443498329689020134, guid: e719263cb10fbb3459a2432240ad495b, type: 3}
+      count: 20
+      spawnInterval: 0.5
+      burstSize: 2
+    waitForClear: 0
+  - name: Queen
+    groups:
+    - enemyPrefab: {fileID: 3270887730636500774, guid: 83b760d124d80a744a1d3e07fb985314, type: 3}
+      count: 1
+      spawnInterval: 1
+      burstSize: 1
+    waitForClear: 0
+  _initialDelay: 3
+  _delayBetweenWaves: 5
+  _loopWaves: 0
+  _camera: {fileID: 0}
+  _minSpawnDistance: 12
+  _maxSpawnDistance: 20
+  _spawnAttempts: 16
+  _playerTag: Player
+  _verboseLogs: 1

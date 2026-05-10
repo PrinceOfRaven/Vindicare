@@ -5,6 +5,8 @@ using UnityEngine.Tilemaps;
 [RequireComponent(typeof(Transform))]
 public class CaveGenerator : MonoBehaviour
 {
+    public static CaveGenerator Instance { get; private set; }
+
     [Header("Tilemap Refs")]
     [SerializeField] private Tilemap _groundTilemap;
     [SerializeField] private Tilemap _wallTilemap;
@@ -39,6 +41,15 @@ public class CaveGenerator : MonoBehaviour
     [SerializeField, Min(0)] private int _playerSpawnSafeRadius = 1;
 
     private bool[,] _map;
+
+    public bool IsGenerated { get; private set; }
+    public int Width => _width;
+    public int Height => _height;
+
+    private void Awake()
+    {
+        Instance = this;
+    }
 
     private void Start()
     {
@@ -77,11 +88,43 @@ public class CaveGenerator : MonoBehaviour
         RebuildColliders();
         PlacePlayer();
 
+        IsGenerated = true;
+
         int wallCount = 0;
         for (int x = 0; x < _width; x++)
             for (int y = 0; y < _height; y++)
                 if (_map[x, y]) wallCount++;
         Debug.Log($"[CaveGenerator] seed={_seed} walls={wallCount}/{_width * _height}");
+    }
+
+    public bool IsWalkable(Vector3 worldPos)
+    {
+        if (!IsGenerated || _groundTilemap == null) return false;
+        Vector3Int cell = _groundTilemap.WorldToCell(worldPos);
+        int gx = cell.x + _width / 2;
+        int gy = cell.y + _height / 2;
+        if (gx < 0 || gy < 0 || gx >= _width || gy >= _height) return false;
+        return !_map[gx, gy];
+    }
+
+    public bool TryGetRandomWalkableAround(Vector3 origin, float minRadius, float maxRadius, int attempts, out Vector3 result)
+    {
+        result = origin;
+        if (!IsGenerated || _groundTilemap == null) return false;
+
+        for (int i = 0; i < attempts; i++)
+        {
+            float angle = Random.value * Mathf.PI * 2f;
+            float r = Mathf.Lerp(minRadius, maxRadius, Random.value);
+            Vector3 candidate = origin + new Vector3(Mathf.Cos(angle) * r, Mathf.Sin(angle) * r, 0f);
+            if (IsWalkable(candidate))
+            {
+                Vector3Int cell = _groundTilemap.WorldToCell(candidate);
+                result = _groundTilemap.GetCellCenterWorld(cell);
+                return true;
+            }
+        }
+        return false;
     }
 
     private void SmoothStep()
