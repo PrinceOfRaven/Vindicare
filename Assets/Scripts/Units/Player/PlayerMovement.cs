@@ -3,13 +3,28 @@ using UnityEngine.InputSystem;
 
 public class PlayerMovement : UnitsBase
 {
+    public static PlayerMovement Instance { get; private set; }
+
     private PlayerActionsControl _actions;
     private Vector2 _moveInput;
 
     protected override void Awake()
     {
+        if (Instance != null)
+        {
+            Destroy(gameObject);
+            return;
+        }
+        Instance = this;
+        DontDestroyOnLoad(gameObject);
+
         rb = GetComponent<Rigidbody2D>();
         _actions = new PlayerActionsControl();
+    }
+
+    private void OnDestroy()
+    {
+        if (Instance == this) Instance = null;
     }
 
     private void OnEnable() => _actions.Player.Enable();

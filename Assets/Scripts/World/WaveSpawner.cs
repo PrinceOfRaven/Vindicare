@@ -75,9 +75,10 @@ public class WaveSpawner : MonoBehaviour
 
         while (_player == null)
         {
-            var go = GameObject.FindGameObjectWithTag(_playerTag);
-            if (go != null) _player = go.transform;
-            else yield return null;
+            if (PlayerMovement.Instance != null)
+                _player = PlayerMovement.Instance.transform;
+            else
+                yield return null;
         }
 
         if (_initialDelay > 0f) yield return new WaitForSeconds(_initialDelay);

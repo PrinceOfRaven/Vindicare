@@ -29,10 +29,10 @@ public abstract class EnemyBase : UnitsBase
         AcquireTarget();
     }
 
-    protected void AcquireTarget()
+    private void AcquireTarget()
     {
-        var go = GameObject.FindGameObjectWithTag(_playerTag);
-        if (go != null) _target = go.transform;
+        if (PlayerMovement.Instance != null)
+            _target = PlayerMovement.Instance.transform;
     }
 
     protected virtual void FixedUpdate()
