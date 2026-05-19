@@ -85,6 +85,7 @@ public abstract class EnemyBase : UnitsBase
                 Instantiate(_xpOrbPrefab, transform.position + (Vector3)offset, Quaternion.identity);
             }
         }
+        if (HUD.Instance != null) HUD.Instance.RegisterKill();
         base.onObjectDeath();
     }
 }

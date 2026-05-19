@@ -172,7 +172,7 @@ MonoBehaviour:
   _health: 800
   _speed: 1.2
   _damage: 25
-  _contactRadius: 1.2
+  _contactRadius: 1.5
   _attackCooldown: 1.5
   _playerTag: Player
   _xpOrbPrefab: {fileID: 992180782699027889, guid: d3a79f92beae45443968f91d507edc3b, type: 3}

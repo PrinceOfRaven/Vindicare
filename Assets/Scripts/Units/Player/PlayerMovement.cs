@@ -19,6 +19,7 @@ public class PlayerMovement : UnitsBase
 
         rb = GetComponent<Rigidbody2D>();
         _actions = new PlayerActionsControl();
+        CacheMaxHealth();
     }
 
     private void OnDestroy()
@@ -51,5 +52,26 @@ public class PlayerMovement : UnitsBase
     {
         _maxHealth += bonusHP;
         _health = Mathf.Min(_health + bonusHP, _maxHealth);
+    }
+
+    public override bool TakeDamage(float amount)
+    {
+        if (!IsAlive) return true;
+
+        _health -= Mathf.Max(1, Mathf.RoundToInt(amount));
+        if (_health <= 0)
+        {
+            _health = 0;
+            onObjectDeath();
+            return true;
+        }
+        return false;
+    }
+
+    protected override void onObjectDeath()
+    {
+        RaiseDeath();
+        if (GameOverUI.Instance != null)
+            GameOverUI.Instance.Show();
     }
 }

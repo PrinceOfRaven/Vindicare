@@ -96,9 +96,13 @@ public class GunsBase : MonoBehaviour
         if (_muzzle == null || !_hasMouseData) return;
         Vector2 aimDirection = (_MouseWorldPos - _muzzle.position).normalized;
         float baseAngle = Mathf.Atan2(aimDirection.y, aimDirection.x) * Mathf.Rad2Deg;
-        for (int i = 0; i < _bulletCount; i++)
+
+        float damageMult = PlayerStats.Instance != null ? PlayerStats.Instance.DamageMultiplier : 1f;
+        int totalBullets = _bulletCount + (PlayerStats.Instance != null ? PlayerStats.Instance.ExtraProjectiles : 0);
+
+        for (int i = 0; i < totalBullets; i++)
         {
-            float angleOffset = (_bulletCount > 1) ? -_firingSpread / 2f + i * (_firingSpread / (_bulletCount - 1)) : 0f;
+            float angleOffset = (totalBullets > 1) ? -_firingSpread / 2f + i * (_firingSpread / (totalBullets - 1)) : 0f;
             float finalAngle = baseAngle + angleOffset;
             Quaternion rotation = Quaternion.Euler(0f, 0f, finalAngle);
             GameObject bullet = _bulletPool.Get();
@@ -106,7 +110,7 @@ public class GunsBase : MonoBehaviour
             if (bullet.TryGetComponent(out PooledBullet curBullet))
             {
                 Vector2 direction = rotation * Vector2.right;
-                curBullet.Initialize(_bulletPool, direction, _damage);
+                curBullet.Initialize(_bulletPool, direction, _damage * damageMult);
             }
         }
     }

@@ -39,9 +39,14 @@ public abstract class UnitsBase : MonoBehaviour
         return false;
     }
 
-    protected virtual void onObjectDeath()
+    protected void RaiseDeath()
     {
         OnDeath?.Invoke(this);
+    }
+
+    protected virtual void onObjectDeath()
+    {
+        RaiseDeath();
         Destroy(gameObject);
     }
 }
