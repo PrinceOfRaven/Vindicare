@@ -57,10 +57,14 @@ public class WaveSpawner : MonoBehaviour
     [Header("Дебаг")]
     [SerializeField] private bool _verboseLogs = true;
 
-    private Transform _player;
     private readonly HashSet<UnitsBase> _aliveFromCurrentWave = new HashSet<UnitsBase>();
     private int _currentWaveIndex = -1;
     public int CurrentWaveIndex => _currentWaveIndex;
+
+    // Всегда берём актуального игрока через свойство.
+    // Если игрок пересоздался — мы автоматически получим нового.
+    private Transform Player =>
+        PlayerMovement.Instance != null ? PlayerMovement.Instance.transform : null;
 
     private void Start()
     {
@@ -73,13 +77,7 @@ public class WaveSpawner : MonoBehaviour
         while (CaveGenerator.Instance == null || !CaveGenerator.Instance.IsGenerated)
             yield return null;
 
-        while (_player == null)
-        {
-            if (PlayerMovement.Instance != null)
-                _player = PlayerMovement.Instance.transform;
-            else
-                yield return null;
-        }
+        while (Player == null) yield return null;
 
         if (_initialDelay > 0f) yield return new WaitForSeconds(_initialDelay);
 
@@ -148,9 +146,13 @@ public class WaveSpawner : MonoBehaviour
 
     private void SpawnOne(GameObject prefab)
     {
+        // Если игрока вообще нет (например, помер и сцена пересоздаётся) —
+        // просто пропускаем спавн, ничего страшного.
+        if (Player == null) return;
+
         if (!TryFindSpawnPoint(out Vector3 pos))
         {
-            pos = _player.position;
+            pos = Player.position;
             if (_verboseLogs) Debug.LogWarning("[WaveSpawner] Не нашёл проходимую точку, фоллбэк на игрока.");
         }
 
@@ -165,12 +167,13 @@ public class WaveSpawner : MonoBehaviour
     private bool TryFindSpawnPoint(out Vector3 pos)
     {
         pos = Vector3.zero;
-        if (_player == null || CaveGenerator.Instance == null) return false;
+        var player = Player;
+        if (player == null || CaveGenerator.Instance == null) return false;
 
         for (int i = 0; i < _spawnAttempts; i++)
         {
             if (!CaveGenerator.Instance.TryGetRandomWalkableAround(
-                    _player.position, _minSpawnDistance, _maxSpawnDistance, 4, out Vector3 candidate))
+                    player.position, _minSpawnDistance, _maxSpawnDistance, 4, out Vector3 candidate))
                 continue;
 
             if (_camera != null && IsOnScreen(candidate)) continue;
@@ -180,7 +183,7 @@ public class WaveSpawner : MonoBehaviour
         }
 
         if (CaveGenerator.Instance.TryGetRandomWalkableAround(
-                _player.position, _minSpawnDistance, _maxSpawnDistance, _spawnAttempts, out Vector3 fallback))
+                player.position, _minSpawnDistance, _maxSpawnDistance, _spawnAttempts, out Vector3 fallback))
         {
             pos = fallback;
             return true;

@@ -16,7 +16,6 @@ public class PlayerMovement : UnitsBase
             return;
         }
         Instance = this;
-        DontDestroyOnLoad(gameObject);
 
         rb = GetComponent<Rigidbody2D>();
         _actions = new PlayerActionsControl();
@@ -34,7 +33,7 @@ public class PlayerMovement : UnitsBase
     {
         _moveInput = _actions.Player.Move.ReadValue<Vector2>();
 
-        if (_moveInput.sqrMagnitude > 1) 
+        if (_moveInput.sqrMagnitude > 1)
         {
             _moveInput.Normalize();
         }
@@ -42,6 +41,15 @@ public class PlayerMovement : UnitsBase
 
     private void FixedUpdate()
     {
-        rb.linearVelocity = _moveInput * _speed;
+        float speedMult = PlayerStats.Instance != null
+            ? PlayerStats.Instance.MoveSpeedMultiplier
+            : 1f;
+        rb.linearVelocity = _moveInput * _speed * speedMult;
+    }
+
+    public void HealByMaxHealthUpgrade(int bonusHP)
+    {
+        _maxHealth += bonusHP;
+        _health = Mathf.Min(_health + bonusHP, _maxHealth);
     }
 }

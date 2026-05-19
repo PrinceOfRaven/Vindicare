@@ -69,4 +69,22 @@ public abstract class EnemyBase : UnitsBase
             _nextAttackTime = Time.time + _attackCooldown;
         }
     }
+
+    [Header("Дроп опыта")]
+    [SerializeField] protected GameObject _xpOrbPrefab;
+    [SerializeField, Range(0f, 1f)] protected float _xpDropChance = 1f;
+    [SerializeField, Min(1)] protected int _xpOrbCount = 1;
+
+    protected override void onObjectDeath()
+    {
+        if (_xpOrbPrefab != null && Random.value <= _xpDropChance)
+        {
+            for (int i = 0; i < _xpOrbCount; i++)
+            {
+                Vector2 offset = Random.insideUnitCircle * 0.3f;
+                Instantiate(_xpOrbPrefab, transform.position + (Vector3)offset, Quaternion.identity);
+            }
+        }
+        base.onObjectDeath();
+    }
 }

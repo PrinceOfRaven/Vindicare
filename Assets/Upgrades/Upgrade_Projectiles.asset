@@ -1,0 +1,20 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: fbf70427627226140a43409aab023278, type: 3}
+  m_Name: Upgrade_Projectiles
+  m_EditorClassIdentifier: Assembly-CSharp::UpgradeData
+  upgradeName: "\u0414\u043E\u043F\u043E\u043B\u043D\u0438\u0442\u0435\u043B\u044C\u043D\u044B\u0439
+    \u0441\u0442\u0432\u043E\u043B"
+  description: "+1 \u043F\u0443\u043B\u044F \u0437\u0430 \u0432\u044B\u0441\u0442\u0440\u0435\u043B"
+  icon: {fileID: 0}
+  type: 5
+  maxStacks: 3

@@ -53,7 +53,9 @@ public class GunsBase : MonoBehaviour
 
         if (_isFiring && Time.time >= _nextFireTime)
         {
-            float waitTime = 1f / Mathf.Max(_firingRate, 0.1f);
+            float fireRateMult = PlayerStats.Instance != null
+                ? PlayerStats.Instance.FireRateMultiplier : 1f;
+            float waitTime = 1f / Mathf.Max(_firingRate * fireRateMult, 0.1f);
             _nextFireTime = Time.time + waitTime;
             FireBurst();
         }
@@ -115,7 +117,7 @@ public class GunsBase : MonoBehaviour
 
         // Направление от Muzzle к мыши (как у пуль)
         Vector2 aimDirection = (_MouseWorldPos - _muzzle.position).normalized;
-        
+
         // Спавним прямо в muzzle (как и пули)
         Vector3 spawnPos = _muzzle.position;
 
@@ -128,11 +130,11 @@ public class GunsBase : MonoBehaviour
 
     public Vector2 AimDirection
     {
-      get
-      {
-          if (!_hasMouseData) return transform.right;
-          return (_MouseWorldPos - transform.position).normalized;
-      }
+        get
+        {
+            if (!_hasMouseData) return transform.right;
+            return (_MouseWorldPos - transform.position).normalized;
+        }
     }
     public Transform Muzzle => _muzzle;
 }

@@ -175,3 +175,6 @@ MonoBehaviour:
   _contactRadius: 0.6
   _attackCooldown: 0.8
   _playerTag: Player
+  _xpOrbPrefab: {fileID: 992180782699027889, guid: d3a79f92beae45443968f91d507edc3b, type: 3}
+  _xpDropChance: 0.6
+  _xpOrbCount: 1
