@@ -19,6 +19,12 @@ public class GunsBase : MonoBehaviour
     [SerializeField] private Camera _camera;
     [SerializeField] private float _spriteAngleOffset = 0f;
 
+    [Header("Поворот спрайта игрока вместе с пушкой")]
+    [Tooltip("Sprite Renderer игрока или промежуточный Transform со спрайтом. Будет крутиться за мышью.")]
+    [SerializeField] private Transform _playerSpriteToRotate;
+    [Tooltip("Доп. смещение угла для спрайта (если спрайт смотрит вниз, например, поставь 90)")]
+    [SerializeField] private float _playerSpriteAngleOffset = 0f;
+
     private PlayerActionsControl _playerActionsControl;
     private Vector3 _MouseWorldPos;
     private bool _hasMouseData = false;
@@ -26,7 +32,7 @@ public class GunsBase : MonoBehaviour
     private float _nextFireTime = 0f;
     private float _nextBombTime = 0f;
 
-    private Transform _playerTransform; // кешируем игрока для бомбы
+    private Transform _playerTransform;
 
     private void Awake()
     {
@@ -35,7 +41,6 @@ public class GunsBase : MonoBehaviour
         _playerActionsControl.Player.Attack.canceled += OnFireCanceled;
         _playerActionsControl.Player.Interact.performed += OnInteract;
 
-        // Ищем игрока (PlayerMovement должен быть на том же объекте или выше)
         _playerTransform = GetComponentInParent<PlayerMovement>()?.transform;
         if (_playerTransform == null && PlayerMovement.Instance != null)
             _playerTransform = PlayerMovement.Instance.transform;
@@ -45,7 +50,6 @@ public class GunsBase : MonoBehaviour
     {
         if (_camera == null || Mouse.current == null) return;
         Vector2 screenPos = Mouse.current.position.ReadValue();
-        // Z берем как расстояние от камеры до ОРУЖИЯ (или игрока)
         Vector3 mouseScreen = new Vector3(screenPos.x, screenPos.y,
             _camera.WorldToScreenPoint(transform.position).z);
         _MouseWorldPos = _camera.ScreenToWorldPoint(mouseScreen);
@@ -64,9 +68,10 @@ public class GunsBase : MonoBehaviour
     private void LateUpdate()
     {
         if (!_hasMouseData || _camera == null) return;
+
         Vector2 direction = (_MouseWorldPos - transform.position).normalized;
-        float angle = Mathf.Atan2(direction.y, direction.x) * Mathf.Rad2Deg + _spriteAngleOffset;
-        transform.rotation = Quaternion.Euler(0f, 0f, angle);
+        float angle = Mathf.Atan2(direction.y, direction.x) * Mathf.Rad2Deg;
+        transform.rotation = Quaternion.Euler(0f, 0f, angle + _spriteAngleOffset);
     }
 
     private void OnEnable() => _playerActionsControl.Player.Enable();
@@ -118,13 +123,8 @@ public class GunsBase : MonoBehaviour
     private void ThrowBomb()
     {
         if (_muzzle == null || !_hasMouseData) return;
-
-        // Направление от Muzzle к мыши (как у пуль)
         Vector2 aimDirection = (_MouseWorldPos - _muzzle.position).normalized;
-
-        // Спавним прямо в muzzle (как и пули)
         Vector3 spawnPos = _muzzle.position;
-
         GameObject bomb = Instantiate(_bombPrefab, spawnPos, Quaternion.identity);
         if (bomb.TryGetComponent(out Bomb bombScript))
         {
