@@ -21,6 +21,12 @@ public class Bomb : MonoBehaviour
     {
         _rb = GetComponent<Rigidbody2D>();
         _rb.gravityScale = 0f;
+
+        // Снаряд не должен физически сталкиваться ни с чем — иначе при спавне толкает игрока
+        // и улетает не туда. Урон считается через OverlapCircleAll в Explode().
+        foreach (var col in GetComponentsInChildren<Collider2D>(true))
+            col.enabled = false;
+
         // Яркая пульсирующая магента-метка
         CyberpunkFX.AttachLight(transform, CyberpunkFX.Magenta, intensity: 2.0f, outerRadius: 2.2f);
     }
@@ -33,9 +39,37 @@ public class Bomb : MonoBehaviour
         StartCoroutine(DetonationTimer());
     }
 
+    /// <summary>Запустить бомбу в конкретную точку мира — там она остановится и взорвётся.</summary>
+    public void LaunchToPosition(Vector2 targetPos)
+    {
+        Vector2 startPos = transform.position;
+        Vector2 toTarget = targetPos - startPos;
+        float distance = toTarget.magnitude;
+        Vector2 direction = distance > 0.001f ? toTarget / distance : Vector2.right;
+
+        _rb.linearVelocity = direction * _speed;
+        float angle = Mathf.Atan2(direction.y, direction.x) * Mathf.Rad2Deg;
+        transform.rotation = Quaternion.Euler(0f, 0f, angle);
+
+        // Если цель слишком далеко — fuseTime сработает как safety-cap
+        float travelTime = Mathf.Min(distance / _speed, _fuseTime);
+        StartCoroutine(TravelToTarget(travelTime, targetPos, distance <= _speed * _fuseTime));
+    }
+
     private IEnumerator DetonationTimer()
     {
         yield return new WaitForSeconds(_fuseTime);
+        Explode();
+    }
+
+    private IEnumerator TravelToTarget(float travelTime, Vector2 targetPos, bool reachesTarget)
+    {
+        yield return new WaitForSeconds(travelTime);
+        if (reachesTarget)
+        {
+            _rb.linearVelocity = Vector2.zero;
+            transform.position = targetPos;
+        }
         Explode();
     }
 

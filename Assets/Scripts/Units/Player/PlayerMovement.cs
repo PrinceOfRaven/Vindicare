@@ -22,6 +22,8 @@ public class PlayerMovement : UnitsBase
     private float _lastFacingX = 1f;
     private float _lastFacingY = -1f; // -1 значит "смотрит вниз" по умолчанию
 
+    public Vector2 FacingDirection => new Vector2(_lastFacingX, _lastFacingY);
+
     protected override void Awake()
     {
         if (Instance != null)

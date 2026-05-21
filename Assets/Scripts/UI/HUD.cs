@@ -20,9 +20,9 @@ public class HUD : MonoBehaviour
 
     [Header("Стилизация (cyberpunk)")]
     [Tooltip("Цвет HP-бара при полном здоровье")]
-    [SerializeField] private Color _hpHighColor = new Color(0.0f, 1.0f, 0.66f);
+    [SerializeField] private Color _hpHighColor = new Color(1.0f, 0.15f, 0.20f);
     [Tooltip("Цвет HP-бара при низком здоровье")]
-    [SerializeField] private Color _hpLowColor = new Color(1.0f, 0.20f, 0.30f);
+    [SerializeField] private Color _hpLowColor = new Color(0.55f, 0.0f, 0.08f);
     [Tooltip("Цвет XP-бара")]
     [SerializeField] private Color _xpColor = new Color(0.0f, 0.85f, 1.0f);
 
@@ -34,6 +34,7 @@ public class HUD : MonoBehaviour
     private int _kills;
     private float _hpDisplay;
     private float _xpDisplay;
+    private float _xpTarget;
     private Image _hpFillImg;
     private Image _xpFillImg;
 
@@ -72,11 +73,19 @@ public class HUD : MonoBehaviour
             if (_xpFillImg != null) _xpFillImg.color = _xpColor;
         }
 
-        // Усиливаем читаемость HP-цифр поверх заливки + единая стилизация остальных
+        // Принудительно перезаписываем цвета HP — SerializeField-значения в сцене
+        // могут хранить старые инспекторные значения и перебивать code-defaults.
+        _hpHighColor = new Color(1f, 0.15f, 0.20f);
+        _hpLowColor  = new Color(0.55f, 0.0f, 0.08f);
+
         CyberpunkUI.StyleTMP(_hpText,    Color.white,                Color.black, 0.25f);
         CyberpunkUI.StyleTMP(_levelText, new Color(0f, 0.85f, 1f),   Color.black, 0.25f);
-        CyberpunkUI.StyleTMP(_timerText, Color.white,                Color.black, 0.2f);
-        CyberpunkUI.StyleTMP(_killsText, new Color(0.45f, 1f, 0.3f), Color.black, 0.2f);
+        CyberpunkUI.StyleTMP(_timerText, Color.white,                Color.black, 0.25f);
+        CyberpunkUI.StyleTMP(_killsText, new Color(0.45f, 1f, 0.3f), Color.black, 0.25f);
+
+        if (_timerText != null) _timerText.fontSize = 30f;
+        if (_killsText != null) _killsText.fontSize = 22f;
+        if (_levelText != null) _levelText.fontSize = 18f;
     }
 
     /// <summary>
@@ -92,12 +101,26 @@ public class HUD : MonoBehaviour
                 anchorMin: new Vector2(0f, 1f),
                 anchorMax: new Vector2(0f, 1f),
                 pivot:     new Vector2(0f, 1f),
-                pos:       new Vector2(20f, -20f),
-                size:      new Vector2(320f, 28f));
+                pos:       new Vector2(8f, -8f),
+                size:      new Vector2(220f, 22f));
             StretchSliderInternals(_hpSlider);
-            EnsureBackdrop(_hpSlider, new Color(0.05f, 0.02f, 0.08f, 0.7f));
-            CyberpunkUI.AddNeonBorder((RectTransform)_hpSlider.transform, new Color(0f, 1f, 0.88f) * 2.2f, 2f);
-            AddBarIcon(_hpSlider, _hpIcon, new Color(1f, 0.35f, 0.45f));
+            EnsureBackdrop(_hpSlider, new Color(0.12f, 0.0f, 0.02f, 0.75f));
+
+            // HP-текст — вынести вправо от бара, не накладывать на заливку
+            if (_hpText != null)
+            {
+                var hpTxtRt = _hpText.transform as RectTransform;
+                if (hpTxtRt != null)
+                {
+                    hpTxtRt.anchorMin        = new Vector2(1f, 0.5f);
+                    hpTxtRt.anchorMax        = new Vector2(1f, 0.5f);
+                    hpTxtRt.pivot            = new Vector2(0f, 0.5f);
+                    hpTxtRt.anchoredPosition = new Vector2(8f, 0f);
+                    hpTxtRt.sizeDelta        = new Vector2(90f, 22f);
+                }
+                _hpText.alignment     = TMPro.TextAlignmentOptions.Left;
+                _hpText.raycastTarget = false;
+            }
         }
 
         if (_xpSlider != null)
@@ -107,16 +130,38 @@ public class HUD : MonoBehaviour
                 anchorMin: new Vector2(0f, 0f),
                 anchorMax: new Vector2(1f, 0f),
                 pivot:     new Vector2(0.5f, 0f),
-                pos:       new Vector2(0f, 20f),
-                size:      new Vector2(-40f, 16f));
+                pos:       new Vector2(0f, 6f),
+                size:      new Vector2(-16f, 14f));
             StretchSliderInternals(_xpSlider);
             EnsureBackdrop(_xpSlider, new Color(0.05f, 0.05f, 0.12f, 0.7f));
             CyberpunkUI.AddNeonBorder((RectTransform)_xpSlider.transform, new Color(0f, 0.85f, 1f) * 2.2f, 2f);
             AddBarIcon(_xpSlider, _xpIcon, new Color(0f, 0.85f, 1f));
         }
+
+        NormalizeTextRect(_levelText,
+            anchorMin: new Vector2(0f, 0f),
+            anchorMax: new Vector2(0f, 0f),
+            pivot:     new Vector2(0f, 0f),
+            pos:       new Vector2(8f, 24f),
+            size:      new Vector2(120f, 22f));
+
+        NormalizeTextRect(_timerText,
+            anchorMin: new Vector2(0.5f, 1f),
+            anchorMax: new Vector2(0.5f, 1f),
+            pivot:     new Vector2(0.5f, 1f),
+            pos:       new Vector2(0f, -8f),
+            size:      new Vector2(190f, 40f));
+
+        NormalizeTextRect(_killsText,
+            anchorMin: new Vector2(1f, 1f),
+            anchorMax: new Vector2(1f, 1f),
+            pivot:     new Vector2(1f, 1f),
+            pos:       new Vector2(-8f, -8f),
+            size:      new Vector2(220f, 34f));
+
     }
 
-    /// <summary>Добавляет дочернюю Image-иконку слева от слайдера (если спрайт назначен).</summary>
+    /// <summary>Добавляет дочернюю Image-иконку внутри слайдера у левого края (если спрайт назначен).</summary>
     private static void AddBarIcon(Slider slider, Sprite icon, Color tint)
     {
         if (slider == null || icon == null) return;
@@ -125,11 +170,24 @@ public class HUD : MonoBehaviour
             parent: slider.transform,
             sprite: icon,
             color: tint,
-            size: new Vector2(28f, 28f),
-            anchoredPos: new Vector2(-18f, 0f),
+            size: new Vector2(22f, 22f),
+            anchoredPos: new Vector2(4f, 0f),
             anchorMin: new Vector2(0f, 0.5f),
             anchorMax: new Vector2(0f, 0.5f),
-            pivot: new Vector2(1f, 0.5f));
+            pivot: new Vector2(0f, 0.5f));
+    }
+
+    private static void NormalizeTextRect(TMP_Text text, Vector2 anchorMin, Vector2 anchorMax,
+                                           Vector2 pivot, Vector2 pos, Vector2 size)
+    {
+        if (text == null) return;
+        var rt = text.transform as RectTransform;
+        if (rt == null) return;
+        rt.anchorMin        = anchorMin;
+        rt.anchorMax        = anchorMax;
+        rt.pivot            = pivot;
+        rt.anchoredPosition = pos;
+        rt.sizeDelta        = size;
     }
 
     private static void NormalizeBarRect(Slider slider, Vector2 anchorMin, Vector2 anchorMax,
@@ -216,14 +274,16 @@ public class HUD : MonoBehaviour
         // Плавное движение XP-бара
         if (_xpSlider != null)
         {
-            _xpDisplay = Mathf.MoveTowards(_xpDisplay, _xpSlider.value,
+            _xpDisplay = Mathf.MoveTowards(_xpDisplay, _xpTarget,
                 Mathf.Max(_xpSlider.maxValue * 1.5f, 5f) * Time.deltaTime);
+            _xpSlider.value = _xpDisplay;
         }
     }
 
     private void UpdateXP(int current, int needed)
     {
-        if (_xpSlider != null) { _xpSlider.maxValue = needed; _xpSlider.value = current; }
+        if (_xpSlider != null) _xpSlider.maxValue = needed;
+        _xpTarget = current;
     }
 
     public void RegisterKill()

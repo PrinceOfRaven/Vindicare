@@ -31,6 +31,7 @@ public class GunsBase : MonoBehaviour
     private bool _isFiring = false;
     private float _nextFireTime = 0f;
     private float _nextBombTime = 0f;
+    private Vector2 _aimDir = Vector2.right; // актуальное направление прицела, обновляется в LateUpdate
 
     private Transform _playerTransform;
 
@@ -39,21 +40,26 @@ public class GunsBase : MonoBehaviour
         _playerActionsControl = new PlayerActionsControl();
         _playerActionsControl.Player.Attack.started += OnFireStarted;
         _playerActionsControl.Player.Attack.canceled += OnFireCanceled;
-        _playerActionsControl.Player.Interact.performed += OnInteract;
+        _playerActionsControl.Player.Interact.started += OnInteract;
 
         _playerTransform = GetComponentInParent<PlayerMovement>()?.transform;
         if (_playerTransform == null && PlayerMovement.Instance != null)
             _playerTransform = PlayerMovement.Instance.transform;
     }
 
+    private Camera ActiveCamera => _camera != null ? _camera : Camera.main;
+
     private void Update()
     {
-        if (_camera == null || Mouse.current == null) return;
-        Vector2 screenPos = Mouse.current.position.ReadValue();
-        Vector3 mouseScreen = new Vector3(screenPos.x, screenPos.y,
-            _camera.WorldToScreenPoint(transform.position).z);
-        _MouseWorldPos = _camera.ScreenToWorldPoint(mouseScreen);
-        _hasMouseData = true;
+        var cam = ActiveCamera;
+        if (cam != null && Mouse.current != null)
+        {
+            Vector2 screenPos = Mouse.current.position.ReadValue();
+            Vector3 mouseScreen = new Vector3(screenPos.x, screenPos.y,
+                cam.WorldToScreenPoint(transform.position).z);
+            _MouseWorldPos = cam.ScreenToWorldPoint(mouseScreen);
+            _hasMouseData = true;
+        }
 
         if (_isFiring && Time.time >= _nextFireTime)
         {
@@ -67,10 +73,16 @@ public class GunsBase : MonoBehaviour
 
     private void LateUpdate()
     {
-        if (!_hasMouseData || _camera == null) return;
+        if (_hasMouseData)
+        {
+            _aimDir = (_MouseWorldPos - transform.position).normalized;
+        }
+        else if (PlayerMovement.Instance != null)
+        {
+            _aimDir = PlayerMovement.Instance.FacingDirection.normalized;
+        }
 
-        Vector2 direction = (_MouseWorldPos - transform.position).normalized;
-        float angle = Mathf.Atan2(direction.y, direction.x) * Mathf.Rad2Deg;
+        float angle = Mathf.Atan2(_aimDir.y, _aimDir.x) * Mathf.Rad2Deg;
         transform.rotation = Quaternion.Euler(0f, 0f, angle + _spriteAngleOffset);
     }
 
@@ -98,9 +110,8 @@ public class GunsBase : MonoBehaviour
 
     private void FireBurst()
     {
-        if (_muzzle == null || !_hasMouseData) return;
-        Vector2 aimDirection = (_MouseWorldPos - _muzzle.position).normalized;
-        float baseAngle = Mathf.Atan2(aimDirection.y, aimDirection.x) * Mathf.Rad2Deg;
+        if (_muzzle == null) return;
+        float baseAngle = Mathf.Atan2(_aimDir.y, _aimDir.x) * Mathf.Rad2Deg;
 
         float damageMult = PlayerStats.Instance != null ? PlayerStats.Instance.DamageMultiplier : 1f;
         int totalBullets = _bulletCount + (PlayerStats.Instance != null ? PlayerStats.Instance.ExtraProjectiles : 0);
@@ -122,14 +133,14 @@ public class GunsBase : MonoBehaviour
 
     private void ThrowBomb()
     {
-        if (_muzzle == null || !_hasMouseData) return;
-        Vector2 aimDirection = (_MouseWorldPos - _muzzle.position).normalized;
-        Vector3 spawnPos = _muzzle.position;
-        GameObject bomb = Instantiate(_bombPrefab, spawnPos, Quaternion.identity);
-        if (bomb.TryGetComponent(out Bomb bombScript))
-        {
-            bombScript.Launch(aimDirection);
-        }
+        if (_muzzle == null) return;
+        GameObject bomb = Instantiate(_bombPrefab, _muzzle.position, Quaternion.identity);
+        if (!bomb.TryGetComponent(out Bomb bombScript)) return;
+
+        if (_hasMouseData)
+            bombScript.LaunchToPosition(_MouseWorldPos);
+        else
+            bombScript.Launch(_aimDir);
     }
 
     public Vector2 AimDirection
