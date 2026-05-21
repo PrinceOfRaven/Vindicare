@@ -26,6 +26,10 @@ public class HUD : MonoBehaviour
     [Tooltip("Цвет XP-бара")]
     [SerializeField] private Color _xpColor = new Color(0.0f, 0.85f, 1.0f);
 
+    [Header("Иконки (опционально — дропни спрайты hivefall_night_heart_256 и hivefall_night_enrgcell_256)")]
+    [SerializeField] private Sprite _hpIcon;
+    [SerializeField] private Sprite _xpIcon;
+
     private float _runTime;
     private int _kills;
     private float _hpDisplay;
@@ -68,12 +72,11 @@ public class HUD : MonoBehaviour
             if (_xpFillImg != null) _xpFillImg.color = _xpColor;
         }
 
-        // Усиливаем читаемость HP-цифр поверх заливки
-        if (_hpText != null)
-        {
-            _hpText.outlineColor = Color.black;
-            _hpText.outlineWidth = 0.25f;
-        }
+        // Усиливаем читаемость HP-цифр поверх заливки + единая стилизация остальных
+        CyberpunkUI.StyleTMP(_hpText,    Color.white,                Color.black, 0.25f);
+        CyberpunkUI.StyleTMP(_levelText, new Color(0f, 0.85f, 1f),   Color.black, 0.25f);
+        CyberpunkUI.StyleTMP(_timerText, Color.white,                Color.black, 0.2f);
+        CyberpunkUI.StyleTMP(_killsText, new Color(0.45f, 1f, 0.3f), Color.black, 0.2f);
     }
 
     /// <summary>
@@ -93,6 +96,8 @@ public class HUD : MonoBehaviour
                 size:      new Vector2(320f, 28f));
             StretchSliderInternals(_hpSlider);
             EnsureBackdrop(_hpSlider, new Color(0.05f, 0.02f, 0.08f, 0.7f));
+            CyberpunkUI.AddNeonBorder((RectTransform)_hpSlider.transform, new Color(0f, 1f, 0.88f) * 2.2f, 2f);
+            AddBarIcon(_hpSlider, _hpIcon, new Color(1f, 0.35f, 0.45f));
         }
 
         if (_xpSlider != null)
@@ -106,7 +111,25 @@ public class HUD : MonoBehaviour
                 size:      new Vector2(-40f, 16f));
             StretchSliderInternals(_xpSlider);
             EnsureBackdrop(_xpSlider, new Color(0.05f, 0.05f, 0.12f, 0.7f));
+            CyberpunkUI.AddNeonBorder((RectTransform)_xpSlider.transform, new Color(0f, 0.85f, 1f) * 2.2f, 2f);
+            AddBarIcon(_xpSlider, _xpIcon, new Color(0f, 0.85f, 1f));
         }
+    }
+
+    /// <summary>Добавляет дочернюю Image-иконку слева от слайдера (если спрайт назначен).</summary>
+    private static void AddBarIcon(Slider slider, Sprite icon, Color tint)
+    {
+        if (slider == null || icon == null) return;
+        if (slider.transform.Find("Icon_" + icon.name) != null) return; // уже есть
+        CyberpunkUI.AddIcon(
+            parent: slider.transform,
+            sprite: icon,
+            color: tint,
+            size: new Vector2(28f, 28f),
+            anchoredPos: new Vector2(-18f, 0f),
+            anchorMin: new Vector2(0f, 0.5f),
+            anchorMax: new Vector2(0f, 0.5f),
+            pivot: new Vector2(1f, 0.5f));
     }
 
     private static void NormalizeBarRect(Slider slider, Vector2 anchorMin, Vector2 anchorMax,
