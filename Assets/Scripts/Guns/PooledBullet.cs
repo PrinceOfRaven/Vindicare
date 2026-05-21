@@ -8,10 +8,36 @@ public class PooledBullet : MonoBehaviour
     [Tooltip("Тег цели, по которой пуля наносит урон. По умолчанию пуля игрока бьёт врагов.")]
     [SerializeField] private string _targetTag = "Enemy";
 
+    [Header("Фидбэк")]
+    [SerializeField] private float _knockbackForce = 4f;
+
     private BulletPool _bulletPool;
     private float _timer;
     private bool _isActive;
     private float _damage;
+    private Vector2 _direction;
+    private TrailRenderer _trail;
+
+    private void Awake()
+    {
+        // Неоновый трейл
+        _trail = GetComponent<TrailRenderer>();
+        if (_trail == null)
+        {
+            _trail = gameObject.AddComponent<TrailRenderer>();
+            _trail.material = CyberpunkFX.TrailMat();
+            _trail.startColor = CyberpunkFX.Cyan * 2.5f;
+            _trail.endColor = new Color(CyberpunkFX.Cyan.r, CyberpunkFX.Cyan.g, CyberpunkFX.Cyan.b, 0f);
+            _trail.startWidth = 0.6f;
+            _trail.endWidth = 0f;
+            _trail.time = 0.18f;
+            _trail.minVertexDistance = 0.05f;
+            _trail.sortingOrder = 9;
+            _trail.emitting = false;
+        }
+        // Точечный 2D-свет
+        CyberpunkFX.AttachLight(transform, CyberpunkFX.Cyan, intensity: 1.5f, outerRadius: 1.6f);
+    }
 
     public void Initialize(BulletPool bulletPool, Vector2 direction, float damage)
     {
@@ -19,10 +45,16 @@ public class PooledBullet : MonoBehaviour
         _damage = damage;
         _timer = 0f;
         _isActive = true;
+        _direction = direction;
 
         if (TryGetComponent(out Rigidbody2D rb))
         {
             rb.linearVelocity = direction * _bulletSpeed;
+        }
+        if (_trail != null)
+        {
+            _trail.Clear();
+            _trail.emitting = true;
         }
     }
 
@@ -47,7 +79,13 @@ public class PooledBullet : MonoBehaviour
         if (collision.CompareTag(_targetTag))
         {
             var unit = collision.GetComponentInParent<UnitsBase>();
-            if (unit != null) unit.TakeDamage(_damage);
+            if (unit != null)
+            {
+                unit.TakeDamage(_damage);
+                if (unit is EnemyBase enemy)
+                    enemy.ApplyKnockback(_direction, _knockbackForce);
+            }
+            CyberpunkFX.SpawnHitSpark(transform.position, CyberpunkFX.Cyan);
         }
 
         ReturnToPool();
@@ -58,6 +96,7 @@ public class PooledBullet : MonoBehaviour
         if (!_isActive) return;
         _isActive = false;
 
+        if (_trail != null) _trail.emitting = false;
         if (TryGetComponent(out Rigidbody2D rb))
         {
             rb.linearVelocity = Vector2.zero;

@@ -56,6 +56,10 @@ public class PlayerLevel : MonoBehaviour
 
             OnLevelUp?.Invoke(_currentLevel);
 
+            // Шейк камеры на левелапе — работает на unscaledDeltaTime,
+            // поэтому проиграется даже после Time.timeScale=0 в UpgradeManager
+            CyberpunkFX.Shake(0.18f, 0.25f);
+
             if (UpgradeManager.Instance != null)
                 UpgradeManager.Instance.OfferUpgrades();
         }

@@ -21,6 +21,8 @@ public class Bomb : MonoBehaviour
     {
         _rb = GetComponent<Rigidbody2D>();
         _rb.gravityScale = 0f;
+        // Яркая пульсирующая магента-метка
+        CyberpunkFX.AttachLight(transform, CyberpunkFX.Magenta, intensity: 2.0f, outerRadius: 2.2f);
     }
 
     public void Launch(Vector2 direction)
@@ -42,14 +44,25 @@ public class Bomb : MonoBehaviour
         if (_exploded) return;
         _exploded = true;
 
+        float dmgMult = PlayerStats.Instance != null ? PlayerStats.Instance.BombDamageMultiplier : 1f;
+        float finalDmg = _damage * dmgMult;
+
         Collider2D[] hits = Physics2D.OverlapCircleAll(transform.position, _explosionRadius, _targetLayers);
         foreach (var hit in hits)
         {
             if (hit.TryGetComponent(out UnitsBase unit) && unit.IsAlive)
             {
-                unit.TakeDamage(_damage);
+                unit.TakeDamage(finalDmg);
+                if (unit is EnemyBase enemy)
+                {
+                    Vector2 push = ((Vector2)hit.transform.position - (Vector2)transform.position).normalized;
+                    enemy.ApplyKnockback(push, 10f);
+                }
             }
         }
+
+        CyberpunkFX.SpawnExplosion(transform.position, _explosionRadius, CyberpunkFX.Magenta);
+        CyberpunkFX.Shake(0.5f, 0.4f);
 
         if (_explosionPrefab != null)
         {

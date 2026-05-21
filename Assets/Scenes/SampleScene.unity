@@ -3207,6 +3207,9 @@ MonoBehaviour:
   _levelText: {fileID: 1200200611}
   _timerText: {fileID: 6079132}
   _killsText: {fileID: 11193219}
+  _hpHighColor: {r: 0, g: 1, b: 0.66, a: 1}
+  _hpLowColor: {r: 1, g: 0.2, b: 0.3, a: 1}
+  _xpColor: {r: 0, g: 0.85, b: 1, a: 1}
 --- !u!1 &1129084793
 GameObject:
   m_ObjectHideFlags: 0

@@ -29,7 +29,17 @@ public abstract class UnitsBase : MonoBehaviour
     {
         if (!IsAlive) return true;
 
-        _health -= Mathf.Max(1, Mathf.RoundToInt(amount));
+        int dmg = Mathf.Max(1, Mathf.RoundToInt(amount));
+        _health -= dmg;
+
+        // Универсальная визуальная реакция: вспышка спрайта + всплывающий урон
+        var flash = GetComponent<HitFlash>();
+        if (flash == null) flash = gameObject.AddComponent<HitFlash>();
+        flash.Flash();
+
+        Color popupColor = this is EnemyBase ? Color.white : CyberpunkFX.HotRed;
+        CyberpunkFX.DamagePopup(transform.position, dmg, popupColor);
+
         if (_health <= 0)
         {
             _health = 0;

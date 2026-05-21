@@ -102,10 +102,29 @@ public class PlayerMovement : UnitsBase
     protected override void onObjectDeath()
     {
         RaiseDeath();
+        CyberpunkFX.SpawnDeathBurst(transform.position, CyberpunkFX.HotRed);
+        CyberpunkFX.Shake(0.35f, 0.5f);
         // Игрок не уничтожается — показываем Game Over
         if (GameOverUI.Instance != null)
             GameOverUI.Instance.Show();
         else
             Debug.LogError("[PlayerMovement] GameOverUI.Instance == null! Проверь что GameOverPanel в сцене активен.");
+    }
+
+    public override bool TakeDamage(float amount)
+    {
+        bool died = base.TakeDamage(amount);
+        if (!died)
+        {
+            CyberpunkFX.Shake(0.20f, 0.18f);
+            CyberpunkFX.HitStop(0.05f);
+        }
+        return died;
+    }
+
+    private void Start()
+    {
+        // Тёплый янтарный point-light вокруг игрока
+        CyberpunkFX.AttachLight(transform, CyberpunkFX.Amber, intensity: 1.1f, outerRadius: 4.5f, innerRadius: 0.3f);
     }
 }

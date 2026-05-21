@@ -22,6 +22,13 @@ public class ExperienceOrb : MonoBehaviour
     private void Start()
     {
         _currentSpeed = _startSpeed;
+        CyberpunkFX.AttachLight(transform, CyberpunkFX.Lime, intensity: 1.2f, outerRadius: 0.9f);
+    }
+
+    private void LateUpdate()
+    {
+        // Лёгкое вращение, не трогает position чтобы не конфликтовать с чейзом
+        transform.Rotate(0f, 0f, 140f * Time.deltaTime, Space.Self);
     }
 
     private void Update()
@@ -54,6 +61,7 @@ public class ExperienceOrb : MonoBehaviour
     private void Collect()
     {
         _collected = true;
+        CyberpunkFX.SpawnPickupPop(transform.position, CyberpunkFX.Lime);
         if (PlayerLevel.Instance != null)
             PlayerLevel.Instance.AddExperience(_xpAmount);
         Destroy(gameObject);

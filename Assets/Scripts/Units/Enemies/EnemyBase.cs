@@ -77,6 +77,9 @@ public abstract class EnemyBase : UnitsBase
 
     protected override void onObjectDeath()
     {
+        CyberpunkFX.SpawnDeathBurst(transform.position, CyberpunkFX.Magenta);
+        CyberpunkFX.Shake(0.08f, 0.10f);
+
         if (_xpOrbPrefab != null && Random.value <= _xpDropChance)
         {
             for (int i = 0; i < _xpOrbCount; i++)
@@ -87,5 +90,12 @@ public abstract class EnemyBase : UnitsBase
         }
         if (HUD.Instance != null) HUD.Instance.RegisterKill();
         base.onObjectDeath();
+    }
+
+    /// <summary>Толчок от попадания — вызывается из снаряда/взрыва.</summary>
+    public void ApplyKnockback(Vector2 direction, float force)
+    {
+        if (rb == null || !IsAlive) return;
+        rb.AddForce(direction.normalized * force, ForceMode2D.Impulse);
     }
 }
