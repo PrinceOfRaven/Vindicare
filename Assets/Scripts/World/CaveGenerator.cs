@@ -26,6 +26,10 @@ public class CaveGenerator : MonoBehaviour
     [Tooltip("Минимальный размер пещеры в клетках. Пещеры меньше будут заполнены стеной.")]
     [SerializeField, Min(1)] private int _minCaveSize = 50;
 
+    [Tooltip("Толщина невидимой стены-рамки за границей карты (в клетках). " +
+             "Закрывает чёрную пустоту от камеры.")]
+    [SerializeField, Min(0)] private int _borderThickness = 16;
+
     [Tooltip("Гарантировать, что игрок появится в самой большой пещере.")]
     [SerializeField] private bool _keepOnlyLargestCave = true;
 
@@ -226,13 +230,24 @@ public class CaveGenerator : MonoBehaviour
     {
         _groundTilemap.ClearAllTiles();
         _wallTilemap.ClearAllTiles();
-        for (int x = 0; x < _width; x++)
+
+        // Рисуем с запасом за границей сетки: рамка из wall-тайлов закрывает
+        // чёрную пустоту, которую иначе видела бы камера у края карты.
+        for (int x = -_borderThickness; x < _width + _borderThickness; x++)
         {
-            for (int y = 0; y < _height; y++)
+            for (int y = -_borderThickness; y < _height + _borderThickness; y++)
             {
                 Vector3Int pos = new Vector3Int(x - _width / 2, y - _height / 2, 0);
-                _groundTilemap.SetTile(pos, _groundTile);
-                if (_map[x, y]) _wallTilemap.SetTile(pos, _wallTile);
+                bool inside = x >= 0 && y >= 0 && x < _width && y < _height;
+                if (inside)
+                {
+                    _groundTilemap.SetTile(pos, _groundTile);
+                    if (_map[x, y]) _wallTilemap.SetTile(pos, _wallTile);
+                }
+                else
+                {
+                    _wallTilemap.SetTile(pos, _wallTile);
+                }
             }
         }
     }

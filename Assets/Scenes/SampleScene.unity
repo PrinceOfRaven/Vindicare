@@ -4888,9 +4888,10 @@ MonoBehaviour:
   _wallsComposite: {fileID: 119221989}
   _width: 80
   _height: 80
-  _fillProbability: 0.45
+  _fillProbability: 0.37
   _smoothIterations: 5
   _minCaveSize: 50
+  _borderThickness: 16
   _keepOnlyLargestCave: 1
   _useRandomSeed: 1
   _seed: 0
