@@ -86,6 +86,9 @@ public class Bomb : MonoBehaviour
         {
             if (hit.TryGetComponent(out UnitsBase unit) && unit.IsAlive)
             {
+                // Снаряд игрока не должен дамажить самого игрока
+                if (unit is PlayerMovement) continue;
+
                 unit.TakeDamage(finalDmg);
                 if (unit is EnemyBase enemy)
                 {

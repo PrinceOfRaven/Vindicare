@@ -33,8 +33,9 @@ public class HUD : MonoBehaviour
     private float _runTime;
     private int _kills;
     private float _hpDisplay;
-    private float _xpDisplay;
-    private float _xpTarget;
+    private float _xpDisplay;   // отображаемое заполнение бара, 0..1
+    private float _xpTarget;    // реальное заполнение бара, 0..1
+    private bool _xpFlushing;   // идёт анимация «дозаполнить до конца и сбросить»
     private Image _hpFillImg;
     private Image _xpFillImg;
 
@@ -51,7 +52,10 @@ public class HUD : MonoBehaviour
     {
         if (Instance == this) Instance = null;
         if (PlayerLevel.Instance != null)
+        {
             PlayerLevel.Instance.OnXPChanged -= UpdateXP;
+            PlayerLevel.Instance.OnLevelUp   -= HandleLevelUp;
+        }
     }
 
     private void Start()
@@ -59,6 +63,7 @@ public class HUD : MonoBehaviour
         if (PlayerLevel.Instance != null)
         {
             PlayerLevel.Instance.OnXPChanged += UpdateXP;
+            PlayerLevel.Instance.OnLevelUp   += HandleLevelUp;
             UpdateXP(PlayerLevel.Instance.CurrentXP, PlayerLevel.Instance.XPToNext);
         }
 
@@ -67,10 +72,24 @@ public class HUD : MonoBehaviour
 
         if (_hpSlider != null && _hpSlider.fillRect != null)
             _hpFillImg = _hpSlider.fillRect.GetComponent<Image>();
-        if (_xpSlider != null && _xpSlider.fillRect != null)
+        if (_xpSlider != null)
         {
-            _xpFillImg = _xpSlider.fillRect.GetComponent<Image>();
-            if (_xpFillImg != null) _xpFillImg.color = _xpColor;
+            // Бар работает в нормализованной шкале 0..1 — не зависит от меняющегося порога опыта
+            _xpSlider.wholeNumbers = false;
+            _xpSlider.minValue = 0f;
+            _xpSlider.maxValue = 1f;
+
+            // NormalizeHUD растянул fillRect на всю ширину слайдера. Slider не
+            // перерисует заливку, пока value реально не изменится, поэтому без
+            // этого тоггла бар висит «полным» до получения первого опыта.
+            _xpSlider.value = 1f;
+            _xpSlider.value = 0f;
+
+            if (_xpSlider.fillRect != null)
+            {
+                _xpFillImg = _xpSlider.fillRect.GetComponent<Image>();
+                if (_xpFillImg != null) _xpFillImg.color = _xpColor;
+            }
         }
 
         // Принудительно перезаписываем цвета HP — SerializeField-значения в сцене
@@ -271,19 +290,40 @@ public class HUD : MonoBehaviour
         if (_killsText != null)
             _killsText.text = $"Убито: {_kills}";
 
-        // Плавное движение XP-бара
+        // Плавное движение XP-бара (нормализованная шкала 0..1).
+        // unscaledDeltaTime — чтобы анимация доигралась даже при Time.timeScale=0
+        // во время экрана выбора апгрейда.
         if (_xpSlider != null)
         {
-            _xpDisplay = Mathf.MoveTowards(_xpDisplay, _xpTarget,
-                Mathf.Max(_xpSlider.maxValue * 1.5f, 5f) * Time.deltaTime);
+            float dt = Time.unscaledDeltaTime;
+            if (_xpFlushing)
+            {
+                // На левелапе: доводим бар до конца, затем мгновенно сбрасываем в ноль
+                _xpDisplay = Mathf.MoveTowards(_xpDisplay, 1f, 5f * dt);
+                if (_xpDisplay >= 1f - 0.0001f)
+                {
+                    _xpDisplay = 0f;
+                    _xpFlushing = false;
+                }
+            }
+            else
+            {
+                _xpDisplay = Mathf.MoveTowards(_xpDisplay, _xpTarget, 2.5f * dt);
+            }
             _xpSlider.value = _xpDisplay;
         }
     }
 
     private void UpdateXP(int current, int needed)
     {
-        if (_xpSlider != null) _xpSlider.maxValue = needed;
-        _xpTarget = current;
+        _xpTarget = needed > 0 ? Mathf.Clamp01((float)current / needed) : 0f;
+    }
+
+    private void HandleLevelUp(int newLevel)
+    {
+        // Запускаем анимацию «дозаполнить до конца → сброс в ноль».
+        // Реальный остаток опыта прилетит следом через OnXPChanged/UpdateXP.
+        _xpFlushing = true;
     }
 
     public void RegisterKill()
