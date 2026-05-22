@@ -8,7 +8,7 @@ public class GameOverUI : MonoBehaviour
 {
     public static GameOverUI Instance { get; private set; }
 
-    [Header("Содержимое (скрывается, когда не нужно)")]
+    [Header("Содержимое")]
     [SerializeField] private GameObject _content;
 
     [Header("Итоги")]
@@ -19,8 +19,6 @@ public class GameOverUI : MonoBehaviour
     [Header("Кнопки")]
     [SerializeField] private Button _restartButton;
     [SerializeField] private Button _menuButton;
-
-    [Tooltip("Имя сцены главного меню (например, MainMenu)")]
     [SerializeField] private string _mainMenuScene = "MainMenu";
 
     private TMP_Text _titleText;
@@ -31,18 +29,12 @@ public class GameOverUI : MonoBehaviour
         if (Instance != null && Instance != this) { Destroy(this); return; }
         Instance = this;
 
-        // Слушатели цепляем В ПЕРВУЮ ОЧЕРЕДЬ — раньше падение в StyleContent (TMP outlineWidth
-        // на неактивном объекте) убивало Awake, и кнопки оставались без onClick.
         if (_restartButton != null) _restartButton.onClick.AddListener(Restart);
         if (_menuButton != null) _menuButton.onClick.AddListener(ToMenu);
 
-        // Контент в сцене лежит неактивным — стилизацию откладываем до первого Show(),
-        // потому что TMP-материалы инициализируются только когда объект активен.
-
-        Debug.Log("[GameOverUI] Awake выполнен, Instance готов.");
     }
 
-    /// <summary>Однократная стилизация панели: рамка, статы, кнопки, поиск заголовка для глитча.</summary>
+
     private void StyleContent()
     {
         var contentRt = _content.transform as RectTransform;
@@ -50,13 +42,11 @@ public class GameOverUI : MonoBehaviour
 
         CyberpunkUI.AddNeonBorder(contentRt, new Color(1f, 0.18f, 0.80f) * 2.2f, 3f);
 
-        // Статы — белый Bold с outline. Рейкаст выключаем, чтобы текст не съедал клики ниже.
         var statColor = Color.white;
         StyleStat(_levelText, statColor);
         StyleStat(_timeText,  statColor);
         StyleStat(_killsText, statColor);
 
-        // Заголовок: ищем TMP с текстом про смерть среди детей
         foreach (var t in _content.GetComponentsInChildren<TMP_Text>(true))
         {
             var upper = (t.text ?? string.Empty).ToUpperInvariant();
@@ -87,9 +77,6 @@ public class GameOverUI : MonoBehaviour
         var rt = btn.transform as RectTransform;
         if (rt == null) return;
         CyberpunkUI.AddNeonBorder(rt, borderColor, 2f);
-        // CardHoverFX добавлять не надо — на кнопке мешает встроенному ColorTint transition.
-        // Дочерний Text(TMP) растянут на всю кнопку, его рейкаст отключаем чтобы клик гарантированно
-        // попадал в Image самой кнопки (без необходимости ExecuteHierarchy).
         foreach (var t in btn.GetComponentsInChildren<TMP_Text>(true))
         {
             CyberpunkUI.StyleTMP(t, Color.white, Color.black, 0.25f);
@@ -107,7 +94,6 @@ public class GameOverUI : MonoBehaviour
         Debug.Log("[GameOverUI] Show вызван!");
         if (_content != null) _content.SetActive(true);
 
-        // Стилизуем после активации — TMP outlineWidth требует инициализированный материал.
         if (!_styled && _content != null)
         {
             StyleContent();
@@ -135,7 +121,7 @@ public class GameOverUI : MonoBehaviour
         Time.timeScale = 0f;
     }
 
-    /// <summary>Короткий glitch-эффект на заголовке при появлении окна Game Over.</summary>
+
     private IEnumerator GlitchTitle()
     {
         var rt = _titleText.transform as RectTransform;
@@ -147,7 +133,6 @@ public class GameOverUI : MonoBehaviour
         float t = 0f;
         while (t < dur)
         {
-            // мигание + случайный сдвиг 1-3px
             _titleText.alpha = Random.value < 0.5f ? 0.2f : 1f;
             rt.anchoredPosition = basePos + new Vector2(Random.Range(-3f, 3f), Random.Range(-2f, 2f));
             yield return new WaitForSecondsRealtime(0.04f);
@@ -160,15 +145,13 @@ public class GameOverUI : MonoBehaviour
 
     public void Restart()
     {
-        Debug.Log("[GameOverUI] Restart нажат — перезагружаю сцену.");
         Time.timeScale = 1f;
         SceneManager.LoadScene(SceneManager.GetActiveScene().name);
     }
 
     public void ToMenu()
     {
-        Debug.Log("[GameOverUI] ToMenu нажат — переход в меню.");
         Time.timeScale = 1f;
-        SceneManager.LoadScene(_mainMenuScene);
+        CallTransit.Instance.LoadScene("MainMenu");
     }
 }
