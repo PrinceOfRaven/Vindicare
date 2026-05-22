@@ -11,18 +11,12 @@ public class GunsBase : MonoBehaviour
     [SerializeField, Min(0.1f)] private float _firingRate = 5f;
     [SerializeField] private float _firingSpread = 30f;
 
-    [Header("Бомба")]
-    [SerializeField] private GameObject _bombPrefab;
-    [SerializeField, Min(0.1f)] private float _bombCooldown = 2f;
-
     [Header("Настройки камеры")]
     [SerializeField] private Camera _camera;
     [SerializeField] private float _spriteAngleOffset = 0f;
 
-    [Header("Поворот спрайта игрока вместе с пушкой")]
-    [Tooltip("Sprite Renderer игрока или промежуточный Transform со спрайтом. Будет крутиться за мышью.")]
+    [Header("Поворот пушки")]
     [SerializeField] private Transform _playerSpriteToRotate;
-    [Tooltip("Доп. смещение угла для спрайта (если спрайт смотрит вниз, например, поставь 90)")]
     [SerializeField] private float _playerSpriteAngleOffset = 0f;
 
     private PlayerActionsControl _playerActionsControl;
@@ -30,7 +24,6 @@ public class GunsBase : MonoBehaviour
     private bool _hasMouseData = false;
     private bool _isFiring = false;
     private float _nextFireTime = 0f;
-    private float _nextBombTime = 0f;
 
     private Transform _playerTransform;
 
@@ -39,19 +32,20 @@ public class GunsBase : MonoBehaviour
         _playerActionsControl = new PlayerActionsControl();
         _playerActionsControl.Player.Attack.started += OnFireStarted;
         _playerActionsControl.Player.Attack.canceled += OnFireCanceled;
-        _playerActionsControl.Player.Interact.performed += OnInteract;
 
         _playerTransform = GetComponentInParent<PlayerMovement>()?.transform;
-        if (_playerTransform == null && PlayerMovement.Instance != null)
-            _playerTransform = PlayerMovement.Instance.transform;
+        if (_playerTransform == null && PlayerMovement.Instance != null) _playerTransform = PlayerMovement.Instance.transform;
+        if (_camera == null) _camera = Camera.main;
+        if (_bulletPool == null) _bulletPool = FindAnyObjectByType<BulletPool>();
+
     }
 
     private void Update()
     {
+        if (Time.timeScale == 0f) return;
         if (_camera == null || Mouse.current == null) return;
         Vector2 screenPos = Mouse.current.position.ReadValue();
-        Vector3 mouseScreen = new Vector3(screenPos.x, screenPos.y,
-            _camera.WorldToScreenPoint(transform.position).z);
+        Vector3 mouseScreen = new Vector3(screenPos.x, screenPos.y,_camera.WorldToScreenPoint(transform.position).z);
         _MouseWorldPos = _camera.ScreenToWorldPoint(mouseScreen);
         _hasMouseData = true;
 
@@ -67,6 +61,7 @@ public class GunsBase : MonoBehaviour
 
     private void LateUpdate()
     {
+        if (Time.timeScale == 0f) return;
         if (!_hasMouseData || _camera == null) return;
 
         Vector2 direction = (_MouseWorldPos - transform.position).normalized;
@@ -78,23 +73,6 @@ public class GunsBase : MonoBehaviour
     private void OnDisable() => _playerActionsControl.Player.Disable();
     private void OnFireStarted(InputAction.CallbackContext ctx) => _isFiring = true;
     private void OnFireCanceled(InputAction.CallbackContext ctx) => _isFiring = false;
-
-    private void OnInteract(InputAction.CallbackContext ctx)
-    {
-        if (Time.time < _nextBombTime) return;
-        if (_bombPrefab == null)
-        {
-            Debug.LogWarning("Bomb prefab не назначен в GunsBase!");
-            return;
-        }
-        if (_muzzle == null)
-        {
-            Debug.LogWarning("Muzzle не назначен — бомба не может быть брошена!");
-            return;
-        }
-        ThrowBomb();
-        _nextBombTime = Time.time + _bombCooldown;
-    }
 
     private void FireBurst()
     {
@@ -117,18 +95,6 @@ public class GunsBase : MonoBehaviour
                 Vector2 direction = rotation * Vector2.right;
                 curBullet.Initialize(_bulletPool, direction, _damage * damageMult);
             }
-        }
-    }
-
-    private void ThrowBomb()
-    {
-        if (_muzzle == null || !_hasMouseData) return;
-        Vector2 aimDirection = (_MouseWorldPos - _muzzle.position).normalized;
-        Vector3 spawnPos = _muzzle.position;
-        GameObject bomb = Instantiate(_bombPrefab, spawnPos, Quaternion.identity);
-        if (bomb.TryGetComponent(out Bomb bombScript))
-        {
-            bombScript.Launch(aimDirection);
         }
     }
 

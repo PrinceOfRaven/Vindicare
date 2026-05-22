@@ -7,7 +7,7 @@ public class GameOverUI : MonoBehaviour
 {
     public static GameOverUI Instance { get; private set; }
 
-    [Header("Содержимое (скрывается, когда не нужно)")]
+    [Header("Содержимое")]
     [SerializeField] private GameObject _content;
 
     [Header("Итоги")]
@@ -19,8 +19,6 @@ public class GameOverUI : MonoBehaviour
     [SerializeField] private Button _restartButton;
     [SerializeField] private Button _menuButton;
 
-    [Tooltip("Имя сцены главного меню (например, MainMenu)")]
-    [SerializeField] private string _mainMenuScene = "MainMenu";
 
     private void Awake()
     {
@@ -31,8 +29,6 @@ public class GameOverUI : MonoBehaviour
 
         if (_restartButton != null) _restartButton.onClick.AddListener(Restart);
         if (_menuButton != null) _menuButton.onClick.AddListener(ToMenu);
-
-        Debug.Log("[GameOverUI] Awake выполнен, Instance готов.");
     }
 
     private void OnDestroy()
@@ -42,7 +38,6 @@ public class GameOverUI : MonoBehaviour
 
     public void Show()
     {
-        Debug.Log("[GameOverUI] Show вызван!");
         if (_content != null) _content.SetActive(true);
 
         if (PlayerLevel.Instance != null && _levelText != null)
@@ -72,6 +67,6 @@ public class GameOverUI : MonoBehaviour
     public void ToMenu()
     {
         Time.timeScale = 1f;
-        SceneManager.LoadScene(_mainMenuScene);
+        CallTransit.Instance.LoadScene("MainMenu");
     }
 }

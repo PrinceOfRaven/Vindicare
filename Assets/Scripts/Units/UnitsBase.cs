@@ -32,7 +32,6 @@ public abstract class UnitsBase : MonoBehaviour
         int dmg = Mathf.Max(1, Mathf.RoundToInt(amount));
         _health -= dmg;
 
-        // Универсальная визуальная реакция: вспышка спрайта + всплывающий урон
         var flash = GetComponent<HitFlash>();
         if (flash == null) flash = gameObject.AddComponent<HitFlash>();
         flash.Flash();
