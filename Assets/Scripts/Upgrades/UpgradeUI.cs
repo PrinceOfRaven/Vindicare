@@ -11,6 +11,7 @@ public class UpgradeUI : MonoBehaviour
     [SerializeField] private List<UpgradeCard> _cards = new();
 
     private Action<UpgradeData> _onPicked;
+    private UpgradeStatsPanel _statsPanel;
 
     private void Awake()
     {
@@ -21,6 +22,9 @@ public class UpgradeUI : MonoBehaviour
     {
         _onPicked = onPicked;
         _root.SetActive(true);
+
+        EnsureStatsPanel();
+        if (_statsPanel != null) _statsPanel.Refresh();
 
         for (int i = 0; i < _cards.Count; i++)
         {
@@ -39,6 +43,14 @@ public class UpgradeUI : MonoBehaviour
     public void Hide()
     {
         if (_root != null) _root.SetActive(false);
+        if (_statsPanel != null) _statsPanel.Hide();
+    }
+
+    private void EnsureStatsPanel()
+    {
+        if (_statsPanel != null) return;
+        var canvas = GetComponentInParent<Canvas>();
+        if (canvas != null) _statsPanel = UpgradeStatsPanel.Create(canvas.transform);
     }
 
     private void HandleCardClicked(UpgradeData data)

@@ -27,6 +27,8 @@ public abstract class EnemyBase : UnitsBase
     protected virtual void Start()
     {
         AcquireTarget();
+        if (GetComponent<EnemyHealthBar>() == null)
+            gameObject.AddComponent<EnemyHealthBar>();
     }
 
     private void AcquireTarget()
