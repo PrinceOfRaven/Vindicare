@@ -4,8 +4,6 @@ public class PooledBullet : MonoBehaviour
 {
     [SerializeField] private float _lifeTime = 5f;
     [SerializeField] private float _bulletSpeed = 10f;
-
-    [Tooltip("Тег цели, по которой пуля наносит урон. По умолчанию пуля игрока бьёт врагов.")]
     [SerializeField] private string _targetTag = "Enemy";
 
     [Header("Фидбэк")]
@@ -20,7 +18,6 @@ public class PooledBullet : MonoBehaviour
 
     private void Awake()
     {
-        // Неоновый трейл
         _trail = GetComponent<TrailRenderer>();
         if (_trail == null)
         {
@@ -35,7 +32,6 @@ public class PooledBullet : MonoBehaviour
             _trail.sortingOrder = 9;
             _trail.emitting = false;
         }
-        // Точечный 2D-свет
         CyberpunkFX.AttachLight(transform, CyberpunkFX.Cyan, intensity: 1.5f, outerRadius: 1.6f);
     }
 

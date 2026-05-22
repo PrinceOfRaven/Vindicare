@@ -5,22 +5,17 @@ public class PlayerMovement : UnitsBase
 {
     public static PlayerMovement Instance { get; private set; }
 
-    [Header("Спрайт игрока (флипается и переключается)")]
-    [Tooltip("SpriteRenderer на самом игроке или дочернем объекте")]
+    [Header("Спрайт игрока")]
     [SerializeField] private SpriteRenderer _sr;
-
-    [Tooltip("Спрайт когда смотрит вниз / стоит (фронтальный)")]
     [SerializeField] private Sprite _frontSprite;
-
-    [Tooltip("Спрайт когда смотрит вверх (со спины)")]
     [SerializeField] private Sprite _backSprite;
 
     private PlayerActionsControl _actions;
     private Vector2 _moveInput;
 
-    // Запоминаем последнее направление чтобы стоя не дёргаться
+
     private float _lastFacingX = 1f;
-    private float _lastFacingY = -1f; // -1 значит "смотрит вниз" по умолчанию
+    private float _lastFacingY = -1f; 
 
     public Vector2 FacingDirection => new Vector2(_lastFacingX, _lastFacingY);
     public SpriteRenderer BodySprite => _sr;
@@ -93,8 +88,6 @@ public class PlayerMovement : UnitsBase
 
     private void UpdateFacing()
     {
-        // Если двигаемся — запоминаем последнее направление
-        // Используем мёртвую зону чтобы не дёргаться на крошечных значениях
         const float deadzone = 0.3f;
 
         if (Mathf.Abs(_moveInput.x) > deadzone)
@@ -105,17 +98,14 @@ public class PlayerMovement : UnitsBase
 
         if (_sr == null) return;
 
-        // Выбираем спрайт по вертикали (приоритет — вертикаль)
         if (_lastFacingY > 0f && _backSprite != null)
         {
-            _sr.sprite = _backSprite;  // вверх = со спины
+            _sr.sprite = _backSprite;  
         }
         else if (_frontSprite != null)
         {
-            _sr.sprite = _frontSprite; // вниз / по горизонтали = фронт
+            _sr.sprite = _frontSprite; 
         }
-
-        // Флипаем по горизонтали
         _sr.flipX = _lastFacingX < 0f;
     }
 
@@ -146,7 +136,6 @@ public class PlayerMovement : UnitsBase
         RaiseDeath();
         CyberpunkFX.SpawnDeathBurst(transform.position, CyberpunkFX.HotRed);
         CyberpunkFX.Shake(0.35f, 0.5f);
-        // Игрок не уничтожается — показываем Game Over
         if (GameOverUI.Instance != null)
             GameOverUI.Instance.Show();
         else
@@ -166,7 +155,6 @@ public class PlayerMovement : UnitsBase
 
     private void Start()
     {
-        // Тёплый янтарный point-light вокруг игрока
         CyberpunkFX.AttachLight(transform, CyberpunkFX.Amber, intensity: 1.1f, outerRadius: 4.5f, innerRadius: 0.3f);
 
         // Анимация ходьбы (покачивание + squash/stretch) — без правок сцены
