@@ -19,7 +19,7 @@ public class PauseMenu : MonoBehaviour
     {
         _inputActions.UI.OnPause.performed += ctx => TogglePause();
         _inputActions.UI.Enable();
-        SetPauseState(false); 
+        SetPauseState(false);
     }
 
     private void OnDisable()

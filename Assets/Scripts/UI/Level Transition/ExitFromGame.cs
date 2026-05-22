@@ -2,7 +2,7 @@ using UnityEngine;
 
 public class ExitFromGame : MonoBehaviour
 {
-    public void Exit() 
+    public void Exit()
     {
         Application.Quit();
     }

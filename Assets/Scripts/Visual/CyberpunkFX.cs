@@ -4,14 +4,8 @@ using UnityEngine;
 using UnityEngine.Rendering;
 using UnityEngine.Rendering.Universal;
 
-/// <summary>
-/// Единая точка визуальных эффектов: пост-обработка, глобальный 2D-свет,
-/// процедурные партиклы, шейк, hit-stop, damage popup'ы.
-/// Запускается автоматически после загрузки сцены — никаких ручных компонентов в сцене не нужно.
-/// </summary>
 public static class CyberpunkFX
 {
-    // ─── Cyberpunk-палитра ───
     public static readonly Color Cyan    = new Color(0.0f, 1.0f, 0.88f, 1f);
     public static readonly Color Magenta = new Color(1.0f, 0.18f, 0.80f, 1f);
     public static readonly Color Amber   = new Color(1.0f, 0.70f, 0.16f, 1f);
@@ -67,7 +61,6 @@ public static class CyberpunkFX
         profile.name = "CyberpunkProfile";
         vol.sharedProfile = profile;
 
-        // Bloom: яркое неоновое свечение
         var bloom = profile.Add<Bloom>(true);
         bloom.active = true;
         bloom.intensity.overrideState = true;   bloom.intensity.value = 1.4f;
@@ -76,7 +69,6 @@ public static class CyberpunkFX
         bloom.tint.overrideState      = true;   bloom.tint.value      = new Color(0.85f, 0.92f, 1f);
         bloom.highQualityFiltering.overrideState = true; bloom.highQualityFiltering.value = true;
 
-        // Vignette: затемнение по краям
         var vignette = profile.Add<Vignette>(true);
         vignette.active = true;
         vignette.color.overrideState     = true; vignette.color.value     = new Color(0.05f, 0.0f, 0.12f);
@@ -84,12 +76,10 @@ public static class CyberpunkFX
         vignette.smoothness.overrideState= true; vignette.smoothness.value= 0.5f;
         vignette.rounded.overrideState   = true; vignette.rounded.value   = false;
 
-        // Лёгкая хроматическая аберрация
         var ca = profile.Add<ChromaticAberration>(true);
         ca.active = true;
         ca.intensity.overrideState = true; ca.intensity.value = 0.18f;
 
-        // Цветокор: чуть контраста, мягкий сине-фиолетовый сдвиг
         var color = profile.Add<ColorAdjustments>(true);
         color.active = true;
         color.postExposure.overrideState = true; color.postExposure.value = 0.15f;
@@ -97,7 +87,6 @@ public static class CyberpunkFX
         color.saturation.overrideState   = true; color.saturation.value   = 12f;
         color.colorFilter.overrideState  = true; color.colorFilter.value  = new Color(0.92f, 0.90f, 1.05f);
 
-        // Film grain
         var grain = profile.Add<FilmGrain>(true);
         grain.active = true;
         grain.intensity.overrideState = true; grain.intensity.value = 0.18f;
@@ -108,7 +97,6 @@ public static class CyberpunkFX
 
     static void EnsureGlobalLight()
     {
-        // Глобальный 2D-свет: тёмный фон с холодным синим оттенком
         foreach (var l in Object.FindObjectsByType<Light2D>(FindObjectsInactive.Exclude))
             if (l.lightType == Light2D.LightType.Global) return;
 
@@ -136,8 +124,6 @@ public static class CyberpunkFX
         else
             _shake = cam.GetComponent<CameraShake>();
     }
-
-    // ─── Публичный API ───
 
     public static void Shake(float amplitude = 0.18f, float duration = 0.15f, float freq = 28f)
     {
@@ -186,22 +172,18 @@ public static class CyberpunkFX
         ps.gameObject.AddComponent<DestroyAfter>().lifetime = 1.5f;
         AddLightFlash(ps.gameObject, color, intensity: 4f, radius: radius * 1.8f, duration: 0.4f);
 
-        // Кольцо
         var ring = BuildRing(pos, color, radius);
         ring.gameObject.AddComponent<DestroyAfter>().lifetime = 0.8f;
     }
 
-    // ─── Внутренности: построение партиклов и материалов ───
-
     static Material GlowMat()
     {
         if (_glowMat != null) return _glowMat;
-        // URP/2D совместимый аддитивный шейдер для партиклов
         var sh = Shader.Find("Universal Render Pipeline/Particles/Unlit");
         if (sh == null) sh = Shader.Find("Sprites/Default");
         _glowMat = new Material(sh) { name = "FXGlow" };
-        if (_glowMat.HasProperty("_Surface")) _glowMat.SetFloat("_Surface", 1f);   // Transparent
-        if (_glowMat.HasProperty("_Blend"))   _glowMat.SetFloat("_Blend", 1f);     // Additive
+        if (_glowMat.HasProperty("_Surface")) _glowMat.SetFloat("_Surface", 1f);
+        if (_glowMat.HasProperty("_Blend"))   _glowMat.SetFloat("_Blend", 1f);
         if (_glowMat.HasProperty("_BaseColor"))_glowMat.SetColor("_BaseColor", Color.white);
         _glowMat.renderQueue = 3100;
         return _glowMat;
@@ -229,7 +211,7 @@ public static class CyberpunkFX
         main.startLifetime = lifetime;
         main.startSpeed = speed;
         main.startSize = new ParticleSystem.MinMaxCurve(sizeMin, sizeMax);
-        main.startColor = new ParticleSystem.MinMaxGradient(color * 2.5f); // HDR для bloom
+        main.startColor = new ParticleSystem.MinMaxGradient(color * 2.5f);
         main.simulationSpace = ParticleSystemSimulationSpace.World;
         main.maxParticles = count + 4;
         main.playOnAwake = true;
@@ -319,7 +301,6 @@ public static class CyberpunkFX
         lightGo.AddComponent<LightFade>().Setup(intensity, duration);
     }
 
-    /// <summary>Прицепить point-light как ребёнок к сущности. Возвращает Light2D.</summary>
     public static Light2D AttachLight(Transform target, Color color, float intensity, float outerRadius, float innerRadius = 0f)
     {
         var go = new GameObject("Light2D");
@@ -335,25 +316,35 @@ public static class CyberpunkFX
     }
 }
 
-/// <summary>Постоянно живущий "runner" для корутин и hit-stop / popup.</summary>
 public class FXRunner : MonoBehaviour
 {
-    Coroutine _hitStop;
+    bool _hitStopRunning;
+    float _hitStopUntil;
+    float _savedTimeScale = 1f;
 
     public void DoHitStop(float seconds)
     {
-        if (_hitStop != null) StopCoroutine(_hitStop);
-        _hitStop = StartCoroutine(HitStopCR(seconds));
+        if (!_hitStopRunning)
+        {
+            if (Time.timeScale <= 0.01f) return;
+            _savedTimeScale = Time.timeScale;
+            _hitStopUntil = Time.realtimeSinceStartup + seconds;
+            StartCoroutine(HitStopCR());
+        }
+        else
+        {
+            _hitStopUntil = Mathf.Max(_hitStopUntil, Time.realtimeSinceStartup + seconds);
+        }
     }
 
-    IEnumerator HitStopCR(float seconds)
+    IEnumerator HitStopCR()
     {
-        // Если игра уже на паузе (timeScale=0), не трогаем
-        if (Time.timeScale <= 0.01f) yield break;
-        float prev = Time.timeScale;
-        Time.timeScale = 0.0f;
-        yield return new WaitForSecondsRealtime(seconds);
-        if (Time.timeScale < 0.01f) Time.timeScale = prev;
+        _hitStopRunning = true;
+        Time.timeScale = 0f;
+        while (Time.realtimeSinceStartup < _hitStopUntil)
+            yield return null;
+        Time.timeScale = _savedTimeScale;
+        _hitStopRunning = false;
     }
 
     public void SpawnDamagePopup(Vector3 worldPos, float amount, Color color)
@@ -395,7 +386,6 @@ public class DamagePopupAnim : MonoBehaviour
         _t += Time.unscaledDeltaTime;
         float p = Mathf.Clamp01(_t / lifetime);
         transform.position = _start + Vector3.up * (floatSpeed * p);
-        // pop-scale: 0 → 1.2 → 1.0
         float s = p < 0.15f ? Mathf.Lerp(0.1f, 1.2f, p / 0.15f)
                             : Mathf.Lerp(1.2f, 0.9f, (p - 0.15f) / 0.85f);
         transform.localScale = Vector3.one * s;

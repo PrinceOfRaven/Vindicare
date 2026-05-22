@@ -50,7 +50,6 @@ public class Boss : EnemyBase
         _phase2Activated = true;
         _speed = _basePhase1Speed * _phase2SpeedMultiplier;
         _summonInterval = _basePhase1SummonInterval * _phase2SummonRateMultiplier;
-        Debug.Log("[Boss] Phase 2: королева в ярости.");
     }
 
     private void SummonMinions()

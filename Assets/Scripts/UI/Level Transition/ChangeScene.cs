@@ -9,7 +9,7 @@ public class ChangeScene : MonoBehaviour
     {
         Button btn = GetComponent<Button>();
 
-        if (btn != null ) 
+        if (btn != null )
         {
             btn.onClick.AddListener(() =>
             {

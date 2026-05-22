@@ -34,7 +34,6 @@ public class GameOverUI : MonoBehaviour
 
     }
 
-
     private void StyleContent()
     {
         var contentRt = _content.transform as RectTransform;
@@ -91,7 +90,6 @@ public class GameOverUI : MonoBehaviour
 
     public void Show()
     {
-        Debug.Log("[GameOverUI] Show вызван!");
         if (_content != null) _content.SetActive(true);
 
         if (!_styled && _content != null)
@@ -120,7 +118,6 @@ public class GameOverUI : MonoBehaviour
 
         Time.timeScale = 0f;
     }
-
 
     private IEnumerator GlitchTitle()
     {

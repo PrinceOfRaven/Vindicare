@@ -1,6 +1,5 @@
 using UnityEngine;
 
-/// <summary>Чуть-чуть качается и крутится — для XP-орбов и подобной мелочи.</summary>
 public class Spin2D : MonoBehaviour
 {
     public float spinSpeed = 90f;

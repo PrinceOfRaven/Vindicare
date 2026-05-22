@@ -1,10 +1,5 @@
 using UnityEngine;
 
-/// <summary>
-/// Анимация ходьбы без спрайт-листов: при движении спрайт игрока покачивается
-/// вверх-вниз. Анимируется сам спрайт — никаких фейковых конечностей.
-/// PlayerMovement добавляет этот компонент сам — вешать вручную не требуется.
-/// </summary>
 [RequireComponent(typeof(PlayerMovement))]
 public class PlayerWalkAnimation : MonoBehaviour
 {
@@ -30,7 +25,6 @@ public class PlayerWalkAnimation : MonoBehaviour
     {
         _player = GetComponent<PlayerMovement>();
         _sr = _player.BodySprite;
-        // Анимируем только дочерний спрайт: двигать корень нельзя — там физика.
         if (_sr == null || _sr.transform == transform) { enabled = false; return; }
 
         _spriteTr   = _sr.transform;
@@ -51,7 +45,6 @@ public class PlayerWalkAnimation : MonoBehaviour
                       && _player.MoveInput.sqrMagnitude > 0.02f;
 
         _walkBlend = Mathf.MoveTowards(_walkBlend, moving ? 1f : 0f, _blendSpeed * dt);
-        // Фаза идёт по пройденному пути — нет «скольжения», ускоряется с баффами скорости.
         if (moving) _phase += dist * _phasePerUnit;
 
         float lift = Mathf.Abs(Mathf.Sin(_phase));

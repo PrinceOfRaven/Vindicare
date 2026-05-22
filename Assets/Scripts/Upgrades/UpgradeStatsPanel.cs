@@ -3,11 +3,6 @@ using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 
-/// <summary>
-/// Панель текущих характеристик игрока на экране выбора апгрейда.
-/// Строится целиком в рантайме (как и весь UI проекта) и обновляется
-/// при каждом показе экрана апгрейдов.
-/// </summary>
 public class UpgradeStatsPanel : MonoBehaviour
 {
     static readonly Color Accent = new Color(0f, 0.85f, 1f);
@@ -27,7 +22,6 @@ public class UpgradeStatsPanel : MonoBehaviour
     {
         var rt = (RectTransform)transform;
         rt.SetParent(canvas, false);
-        // Прижата к верху экрана, по центру — под таймером HUD, выше карточек.
         rt.anchorMin = new Vector2(0.5f, 1f);
         rt.anchorMax = new Vector2(0.5f, 1f);
         rt.pivot = new Vector2(0.5f, 1f);
@@ -79,7 +73,6 @@ public class UpgradeStatsPanel : MonoBehaviour
         return text;
     }
 
-    /// <summary>Перечитать синглтоны и заполнить панель актуальными статами.</summary>
     public void Refresh()
     {
         gameObject.SetActive(true);

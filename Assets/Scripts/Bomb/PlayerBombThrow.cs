@@ -1,7 +1,6 @@
 using UnityEngine;
 using UnityEngine.InputSystem;
 
-
 public class PlayerBombThrow : MonoBehaviour
 {
     [Header("Бомба")]
@@ -34,7 +33,6 @@ public class PlayerBombThrow : MonoBehaviour
 
         if (_bombPrefab == null)
         {
-            Debug.LogWarning("[PlayerBombThrow] Префаб бомбы не назначен.");
             return;
         }
         if (_camera == null || Mouse.current == null) return;

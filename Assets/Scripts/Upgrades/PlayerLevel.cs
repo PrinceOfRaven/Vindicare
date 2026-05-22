@@ -1,10 +1,6 @@
 using System;
 using UnityEngine;
 
-/// <summary>
-/// Копит опыт и считает уровни.
-/// Кладётся на игрока. При левелапе зовёт UpgradeManager.
-/// </summary>
 public class PlayerLevel : MonoBehaviour
 {
     public static PlayerLevel Instance { get; private set; }
@@ -17,9 +13,8 @@ public class PlayerLevel : MonoBehaviour
     private int _currentLevel = 1;
     private int _xpToNext;
 
-    // Чтобы HUD/UI мог подписаться и нарисовать прогресс-бар
-    public event Action<int, int> OnXPChanged; // (current, needed)
-    public event Action<int> OnLevelUp;        // (new level)
+    public event Action<int, int> OnXPChanged;
+    public event Action<int> OnLevelUp;
 
     public int Level => _currentLevel;
     public int CurrentXP => _currentXP;
@@ -47,7 +42,6 @@ public class PlayerLevel : MonoBehaviour
         if (amount <= 0) return;
         _currentXP += amount;
 
-        // Циклом — на случай если одним рывком набрали на несколько уровней
         while (_currentXP >= _xpToNext)
         {
             _currentXP -= _xpToNext;
@@ -56,8 +50,6 @@ public class PlayerLevel : MonoBehaviour
 
             OnLevelUp?.Invoke(_currentLevel);
 
-            // Шейк камеры на левелапе — работает на unscaledDeltaTime,
-            // поэтому проиграется даже после Time.timeScale=0 в UpgradeManager
             CyberpunkFX.Shake(0.18f, 0.25f);
 
             if (UpgradeManager.Instance != null)

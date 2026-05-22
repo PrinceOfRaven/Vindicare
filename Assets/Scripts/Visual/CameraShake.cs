@@ -1,11 +1,5 @@
 using UnityEngine;
 
-/// <summary>
-/// Лёгкий screen-shake. Накладывает оффсет на позицию камеры в LateUpdate
-/// с высоким DefaultExecutionOrder — после того, как Cinemachine выставил позицию.
-/// Cinemachine каждый кадр перезаписывает Transform.position, поэтому достаточно
-/// просто прибавлять оффсет.
-/// </summary>
 [DefaultExecutionOrder(10000)]
 public class CameraShake : MonoBehaviour
 {
@@ -16,8 +10,6 @@ public class CameraShake : MonoBehaviour
 
     public void Shake(float amplitude, float duration, float frequency = 28f)
     {
-        // Запускаем шейк, берём максимум амплитуды от текущего и нового,
-        // чтобы мелкие шейки не "глушили" большие
         float remaining = _amplitude * Mathf.Max(0f, 1f - _time / Mathf.Max(_duration, 0.001f));
         _amplitude = Mathf.Max(remaining, amplitude);
         _duration = duration;

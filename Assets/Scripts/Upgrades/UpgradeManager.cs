@@ -1,11 +1,6 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-/// <summary>
-/// Менеджер апгрейдов. Когда игрок получает уровень,
-/// выбирает 3 случайных доступных апгрейда из пула,
-/// показывает UI, ждёт выбора.
-/// </summary>
 public class UpgradeManager : MonoBehaviour
 {
     public static UpgradeManager Instance { get; private set; }
@@ -33,10 +28,8 @@ public class UpgradeManager : MonoBehaviour
         if (Instance == this) Instance = null;
     }
 
-    /// <summary>Зовёт PlayerLevel при левелапе.</summary>
     public void OfferUpgrades()
     {
-        // Собираем апгрейды, которые ещё можно взять (не достигнут maxStacks)
         var available = new List<UpgradeData>();
         foreach (var up in _allUpgrades)
         {
@@ -47,11 +40,9 @@ public class UpgradeManager : MonoBehaviour
 
         if (available.Count == 0)
         {
-            Debug.LogWarning("[UpgradeManager] Нет доступных апгрейдов!");
             return;
         }
 
-        // Выбираем N случайных без повторов
         int toPick = Mathf.Min(_choicesCount, available.Count);
         var picked = new List<UpgradeData>();
         for (int i = 0; i < toPick; i++)
@@ -61,7 +52,6 @@ public class UpgradeManager : MonoBehaviour
             available.RemoveAt(idx);
         }
 
-        // Замораживаем игру и показываем UI
         Time.timeScale = 0f;
         if (_upgradeUI != null) _upgradeUI.Show(picked, OnUpgradePicked);
     }

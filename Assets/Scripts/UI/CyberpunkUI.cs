@@ -2,20 +2,13 @@ using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 
-/// <summary>
-/// Универсальные UI-хелперы в киберпанк-стиле:
-/// неоновая рамка из 4 тонких Image, программная иконка, единая TMP-стилизация.
-/// Всё runtime, без префабов и шейдеров.
-/// </summary>
 public static class CyberpunkUI
 {
     const string BorderRoot = "NeonBorder";
 
-    /// <summary>Добавить неоновую рамку из 4 тонких Image вокруг RectTransform.</summary>
     public static void AddNeonBorder(RectTransform parent, Color color, float thickness = 2f)
     {
         if (parent == null) return;
-        // Если рамка уже есть — перекрашиваем
         var existing = parent.Find(BorderRoot);
         if (existing != null)
         {
@@ -65,7 +58,6 @@ public static class CyberpunkUI
         img.raycastTarget = false;
     }
 
-    /// <summary>Единая TMP-стилизация: цвет, обводка, стиль.</summary>
     public static void StyleTMP(TMP_Text text, Color faceColor, Color outlineColor,
                                  float outlineWidth = 0.25f, FontStyles style = FontStyles.Bold)
     {
@@ -76,7 +68,6 @@ public static class CyberpunkUI
         text.fontStyle = style;
     }
 
-    /// <summary>Программно создать дочерний Image-иконку.</summary>
     public static Image AddIcon(Transform parent, Sprite sprite, Color color,
                                  Vector2 size, Vector2 anchoredPos,
                                  Vector2 anchorMin, Vector2 anchorMax, Vector2 pivot)

@@ -1,10 +1,5 @@
 using UnityEngine;
 
-/// <summary>
-/// Полоса здоровья над врагом. Строится спрайтами в мировом пространстве,
-/// заливка масштабируется по доле HP. Навешивается из EnemyBase.Start().
-/// Видна всегда, пока враг жив; уничтожается вместе с врагом.
-/// </summary>
 public class EnemyHealthBar : MonoBehaviour
 {
     const int BgSortingOrder = 45;
@@ -30,8 +25,6 @@ public class EnemyHealthBar : MonoBehaviour
         _unit = GetComponent<UnitsBase>();
         if (_unit == null) { enabled = false; return; }
 
-        // Габариты берём из локальных bounds спрайта — бар масштабируется
-        // вместе с врагом (элита/босс крупнее → бар крупнее пропорционально).
         var sr = GetComponentInChildren<SpriteRenderer>();
         float spriteWidth = 1f;
         float yOffset = 0.7f;
@@ -56,7 +49,6 @@ public class EnemyHealthBar : MonoBehaviour
     {
         var go = new GameObject(objName);
         go.transform.SetParent(parent, false);
-        // Спрайт с пивотом (0,0.5): левый край в локальном нуле — заливка сжимается слева.
         go.transform.localPosition = new Vector3(-_width * 0.5f, 0f, 0f);
         go.transform.localScale = new Vector3(_width, BarHeight, 1f);
         var sr = go.AddComponent<SpriteRenderer>();
@@ -77,8 +69,6 @@ public class EnemyHealthBar : MonoBehaviour
         s.x = _width * frac;
         _fill.localScale = s;
 
-        // Цвета переписываем каждый кадр: HitFlash красит все SpriteRenderer'ы
-        // врага в белый, LateUpdate возвращает бар к нужному виду до отрисовки.
         if (_fillRenderer != null) _fillRenderer.color = Color.Lerp(LowColor, HealthyColor, frac);
         if (_bgRenderer != null) _bgRenderer.color = BgColor;
     }

@@ -98,7 +98,6 @@ public class CaveGenerator : MonoBehaviour
         for (int x = 0; x < _width; x++)
             for (int y = 0; y < _height; y++)
                 if (_map[x, y]) wallCount++;
-        Debug.Log($"[CaveGenerator] seed={_seed} walls={wallCount}/{_width * _height}");
     }
 
     public bool IsWalkable(Vector3 worldPos)
@@ -231,8 +230,6 @@ public class CaveGenerator : MonoBehaviour
         _groundTilemap.ClearAllTiles();
         _wallTilemap.ClearAllTiles();
 
-        // Рисуем с запасом за границей сетки: рамка из wall-тайлов закрывает
-        // чёрную пустоту, которую иначе видела бы камера у края карты.
         for (int x = -_borderThickness; x < _width + _borderThickness; x++)
         {
             for (int y = -_borderThickness; y < _height + _borderThickness; y++)
@@ -298,7 +295,6 @@ public class CaveGenerator : MonoBehaviour
             }
         }
 
-        Debug.LogWarning("[CaveGenerator] Не нашёл безопасной клетки для спавна игрока.");
     }
 
     private bool IsSafeSpawn(int x, int y)

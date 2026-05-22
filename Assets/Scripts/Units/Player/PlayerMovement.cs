@@ -13,9 +13,8 @@ public class PlayerMovement : UnitsBase
     private PlayerActionsControl _actions;
     private Vector2 _moveInput;
 
-
     private float _lastFacingX = 1f;
-    private float _lastFacingY = -1f; 
+    private float _lastFacingY = -1f;
 
     public Vector2 FacingDirection => new Vector2(_lastFacingX, _lastFacingY);
     public SpriteRenderer BodySprite => _sr;
@@ -37,11 +36,6 @@ public class PlayerMovement : UnitsBase
         EnsureChildSprite();
     }
 
-    /// <summary>
-    /// Если спрайт игрока висит на корне (там физика и коллайдер), переносим
-    /// рендер на дочерний объект — тогда его можно анимировать масштабом/позицией,
-    /// не трогая физику. Дальше PlayerMovement работает уже с дочерним спрайтом.
-    /// </summary>
     private void EnsureChildSprite()
     {
         if (_sr == null || _sr.transform != transform) return;
@@ -62,7 +56,7 @@ public class PlayerMovement : UnitsBase
         childSr.maskInteraction = rootSr.maskInteraction;
         childSr.spriteSortPoint = rootSr.spriteSortPoint;
 
-        rootSr.enabled = false;  // рендер с корня убираем — рисует дочерний
+        rootSr.enabled = false;
         _sr = childSr;
     }
 
@@ -100,11 +94,11 @@ public class PlayerMovement : UnitsBase
 
         if (_lastFacingY > 0f && _backSprite != null)
         {
-            _sr.sprite = _backSprite;  
+            _sr.sprite = _backSprite;
         }
         else if (_frontSprite != null)
         {
-            _sr.sprite = _frontSprite; 
+            _sr.sprite = _frontSprite;
         }
         _sr.flipX = _lastFacingX < 0f;
     }
@@ -123,7 +117,6 @@ public class PlayerMovement : UnitsBase
         _health = Mathf.Min(_health + bonusHP, _maxHealth);
     }
 
-    /// <summary>Восстановить здоровье (от аптечки). Не превышает максимум.</summary>
     public void Heal(int amount)
     {
         if (amount <= 0 || !IsAlive) return;
@@ -138,8 +131,6 @@ public class PlayerMovement : UnitsBase
         CyberpunkFX.Shake(0.35f, 0.5f);
         if (GameOverUI.Instance != null)
             GameOverUI.Instance.Show();
-        else
-            Debug.LogError("[PlayerMovement] GameOverUI.Instance == null! Проверь что GameOverPanel в сцене активен.");
     }
 
     public override bool TakeDamage(float amount)
@@ -157,7 +148,6 @@ public class PlayerMovement : UnitsBase
     {
         CyberpunkFX.AttachLight(transform, CyberpunkFX.Amber, intensity: 1.1f, outerRadius: 4.5f, innerRadius: 0.3f);
 
-        // Анимация ходьбы (покачивание + squash/stretch) — без правок сцены
         if (GetComponent<PlayerWalkAnimation>() == null)
             gameObject.AddComponent<PlayerWalkAnimation>();
     }

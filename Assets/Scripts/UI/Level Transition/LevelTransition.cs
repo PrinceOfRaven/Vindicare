@@ -13,12 +13,11 @@ public class LevelTransition : MonoBehaviour
     private Action _fadeInCallback;
     private Action _fadeOutCallback;
 
-
-    public static LevelTransition Instance 
+    public static LevelTransition Instance
     {
-        get 
+        get
         {
-            if (_instance == null) 
+            if (_instance == null)
             {
                 var prefab = Resources.Load<LevelTransition>(_path);
                 _instance = Instantiate(prefab);
@@ -29,13 +28,12 @@ public class LevelTransition : MonoBehaviour
         }
     }
 
-    public void FadeIn(Action fadeInCallBack) 
+    public void FadeIn(Action fadeInCallBack)
     {
         isFading = true;
         _fadeInCallback = fadeInCallBack;
         fade.SetBool("faded", true);
     }
-
 
     public void FadeOut(Action fadeOutCallBack)
     {
@@ -44,7 +42,7 @@ public class LevelTransition : MonoBehaviour
         fade.SetBool("faded", false);
     }
 
-    private void FadeInOver() 
+    private void FadeInOver()
     {
         _fadeInCallback?.Invoke();
         _fadeInCallback = null;

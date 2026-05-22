@@ -2,13 +2,6 @@ using System;
 using System.Collections.Generic;
 using UnityEngine;
 
-/// <summary>
-/// Хранит сколько раз игрок взял каждый тип апгрейда.
-/// Любая система (оружие, движение, бомба) обращается сюда,
-/// чтобы узнать актуальный множитель.
-/// 
-/// Кладётся на тот же GameObject что и игрок.
-/// </summary>
 public class PlayerStats : MonoBehaviour
 {
     public static PlayerStats Instance { get; private set; }
@@ -38,10 +31,8 @@ public class PlayerStats : MonoBehaviour
     [Header("Базовый радиус подбора (мировые единицы)")]
     [SerializeField] private float _basePickupRadius = 1.5f;
 
-    // Счётчики стаков по каждому типу
     private readonly Dictionary<UpgradeData.UpgradeType, int> _stacks = new();
 
-    // Кто-то взял апгрейд — сообщим. Полезно для UI и оружия (пересчитать).
     public event Action OnStatsChanged;
 
     private void Awake()
@@ -55,19 +46,16 @@ public class PlayerStats : MonoBehaviour
         if (Instance == this) Instance = null;
     }
 
-    /// <summary>Сколько раз взят апгрейд этого типа.</summary>
     public int GetStacks(UpgradeData.UpgradeType type)
     {
         return _stacks.TryGetValue(type, out int v) ? v : 0;
     }
 
-    /// <summary>Можно ли ещё взять этот апгрейд (не превышен ли maxStacks).</summary>
     public bool CanTake(UpgradeData data)
     {
         return GetStacks(data.type) < data.maxStacks;
     }
 
-    /// <summary>Применить апгрейд (увеличить счётчик и оповестить).</summary>
     public void ApplyUpgrade(UpgradeData data)
     {
         if (!CanTake(data)) return;
@@ -75,7 +63,6 @@ public class PlayerStats : MonoBehaviour
         int current = GetStacks(data.type);
         _stacks[data.type] = current + 1;
 
-        // Особый случай: MaxHealth не только повышает потолок, но и лечит.
         if (data.type == UpgradeData.UpgradeType.MaxHealth)
         {
             if (PlayerMovement.Instance != null)
@@ -83,10 +70,7 @@ public class PlayerStats : MonoBehaviour
         }
 
         OnStatsChanged?.Invoke();
-        Debug.Log($"[PlayerStats] Взят апгрейд {data.upgradeName}, теперь {_stacks[data.type]}/{data.maxStacks}");
     }
-
-    // --- Геттеры, которыми пользуются другие системы ---
 
     public float DamageMultiplier => 1f + _damagePerStack * GetStacks(UpgradeData.UpgradeType.Damage);
     public float FireRateMultiplier => 1f + _fireRatePerStack * GetStacks(UpgradeData.UpgradeType.FireRate);

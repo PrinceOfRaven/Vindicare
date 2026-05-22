@@ -107,7 +107,6 @@ public abstract class EnemyBase : UnitsBase
         base.onObjectDeath();
     }
 
-    /// <summary>Толчок от попадания — вызывается из снаряда/взрыва.</summary>
     public void ApplyKnockback(Vector2 direction, float force)
     {
         if (rb == null || !IsAlive) return;

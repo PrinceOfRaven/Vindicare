@@ -33,9 +33,9 @@ public class HUD : MonoBehaviour
     private float _runTime;
     private int _kills;
     private float _hpDisplay;
-    private float _xpDisplay;   // отображаемое заполнение бара, 0..1
-    private float _xpTarget;    // реальное заполнение бара, 0..1
-    private bool _xpFlushing;   // идёт анимация «дозаполнить до конца и сбросить»
+    private float _xpDisplay;
+    private float _xpTarget;
+    private bool _xpFlushing;
     private Image _hpFillImg;
     private Image _xpFillImg;
 
@@ -76,21 +76,16 @@ public class HUD : MonoBehaviour
             UpdateXP(PlayerLevel.Instance.CurrentXP, PlayerLevel.Instance.XPToNext);
         }
 
-        // Принудительная нормализация HUD на случай кривых якорей/позиций в сцене
         NormalizeHUD();
 
         if (_hpSlider != null && _hpSlider.fillRect != null)
             _hpFillImg = _hpSlider.fillRect.GetComponent<Image>();
         if (_xpSlider != null)
         {
-            // Бар работает в нормализованной шкале 0..1 — не зависит от меняющегося порога опыта
             _xpSlider.wholeNumbers = false;
             _xpSlider.minValue = 0f;
             _xpSlider.maxValue = 1f;
 
-            // NormalizeHUD растянул fillRect на всю ширину слайдера. Slider не
-            // перерисует заливку, пока value реально не изменится, поэтому без
-            // этого тоггла бар висит «полным» до получения первого опыта.
             _xpSlider.value = 1f;
             _xpSlider.value = 0f;
 
@@ -101,8 +96,6 @@ public class HUD : MonoBehaviour
             }
         }
 
-        // Принудительно перезаписываем цвета HP — SerializeField-значения в сцене
-        // могут хранить старые инспекторные значения и перебивать code-defaults.
         _hpHighColor = new Color(1f, 0.15f, 0.20f);
         _hpLowColor  = new Color(0.55f, 0.0f, 0.08f);
 
@@ -120,10 +113,6 @@ public class HUD : MonoBehaviour
             WaveSpawner.Instance.OnWaveStarted += HandleWaveStarted;
     }
 
-    /// <summary>
-    /// Создаёт runtime-элементы волн: постоянный счётчик «ВОЛНА N», боссовый
-    /// баннер по центру и полноэкранную красную заливку-вспышку.
-    /// </summary>
     private void BuildWaveUI()
     {
         var canvas = GetComponentInParent<Canvas>();
@@ -186,10 +175,6 @@ public class HUD : MonoBehaviour
         }
     }
 
-    /// <summary>
-    /// Принудительно выправляет ректы HP/XP-баров и подложку.
-    /// Запускается каждый раз при загрузке сцены, перетирая любой кривой initial state.
-    /// </summary>
     private void NormalizeHUD()
     {
         if (_hpSlider != null)
@@ -204,7 +189,6 @@ public class HUD : MonoBehaviour
             StretchSliderInternals(_hpSlider);
             EnsureBackdrop(_hpSlider, new Color(0.12f, 0.0f, 0.02f, 0.75f));
 
-            // HP-текст — вынести вправо от бара, не накладывать на заливку
             if (_hpText != null)
             {
                 var hpTxtRt = _hpText.transform as RectTransform;
@@ -259,11 +243,10 @@ public class HUD : MonoBehaviour
 
     }
 
-    /// <summary>Добавляет дочернюю Image-иконку внутри слайдера у левого края (если спрайт назначен).</summary>
     private static void AddBarIcon(Slider slider, Sprite icon, Color tint)
     {
         if (slider == null || icon == null) return;
-        if (slider.transform.Find("Icon_" + icon.name) != null) return; // уже есть
+        if (slider.transform.Find("Icon_" + icon.name) != null) return;
         CyberpunkUI.AddIcon(
             parent: slider.transform,
             sprite: icon,
@@ -306,7 +289,6 @@ public class HUD : MonoBehaviour
         if (fill != null)
         {
             StretchToParent(fill);
-            // Растягиваем и Fill Area (родитель Fill) на всю площадь слайдера
             if (fill.parent is RectTransform fillArea)
                 StretchToParent(fillArea);
         }
@@ -343,12 +325,10 @@ public class HUD : MonoBehaviour
         {
             int hp = PlayerMovement.Instance.Health;
             int max = PlayerMovement.Instance.MaxHealth;
-            // Плавный лерп слайдера
             _hpDisplay = Mathf.MoveTowards(_hpDisplay, hp, Mathf.Max(max * 2f, 20f) * Time.deltaTime);
             if (_hpSlider != null) { _hpSlider.maxValue = max; _hpSlider.value = _hpDisplay; }
             if (_hpText != null) _hpText.text = $"{hp} / {max}";
 
-            // Градиент: зелёно-неон → красный при низком HP
             if (_hpFillImg != null && max > 0)
             {
                 float r = Mathf.Clamp01((float)hp / max);
@@ -369,15 +349,11 @@ public class HUD : MonoBehaviour
         if (_killsText != null)
             _killsText.text = $"Убито: {_kills}";
 
-        // Плавное движение XP-бара (нормализованная шкала 0..1).
-        // unscaledDeltaTime — чтобы анимация доигралась даже при Time.timeScale=0
-        // во время экрана выбора апгрейда.
         if (_xpSlider != null)
         {
             float dt = Time.unscaledDeltaTime;
             if (_xpFlushing)
             {
-                // На левелапе: доводим бар до конца, затем мгновенно сбрасываем в ноль
                 _xpDisplay = Mathf.MoveTowards(_xpDisplay, 1f, 5f * dt);
                 if (_xpDisplay >= 1f - 0.0001f)
                 {
@@ -395,7 +371,6 @@ public class HUD : MonoBehaviour
         UpdateBossBanner();
     }
 
-    /// <summary>Анимация боссового баннера и экранной вспышки (unscaled time).</summary>
     private void UpdateBossBanner()
     {
         if (_bannerTimer <= 0f) return;
@@ -403,7 +378,6 @@ public class HUD : MonoBehaviour
         _bannerTimer -= Time.unscaledDeltaTime;
         float elapsed = BannerDuration - _bannerTimer;
 
-        // Баннер: быстрый fade-in → удержание → fade-out + лёгкая пульсация.
         float alpha;
         if (elapsed < 0.35f)         alpha = elapsed / 0.35f;
         else if (_bannerTimer < 0.9f) alpha = Mathf.Max(0f, _bannerTimer / 0.9f);
@@ -416,7 +390,6 @@ public class HUD : MonoBehaviour
             _bossBanner.rectTransform.localScale = new Vector3(pulse, pulse, 1f);
         }
 
-        // Оверлей: затухающая пульсирующая красная вспышка.
         if (_bossOverlay != null)
         {
             float oa = 0f;
@@ -453,8 +426,6 @@ public class HUD : MonoBehaviour
 
     private void HandleLevelUp(int newLevel)
     {
-        // Запускаем анимацию «дозаполнить до конца → сброс в ноль».
-        // Реальный остаток опыта прилетит следом через OnXPChanged/UpdateXP.
         _xpFlushing = true;
     }
 

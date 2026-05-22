@@ -62,18 +62,14 @@ public class WaveSpawner : MonoBehaviour
 
     public static WaveSpawner Instance { get; private set; }
 
-    /// <summary>Срабатывает при старте волны. Аргументы: накопительный номер волны (1..N) и сама волна.</summary>
     public event Action<int, Wave> OnWaveStarted;
 
     private readonly HashSet<UnitsBase> _aliveFromCurrentWave = new HashSet<UnitsBase>();
     private int _currentWaveIndex = -1;
     public int CurrentWaveIndex => _currentWaveIndex;
 
-    // Накопительный номер волны — не сбрасывается при зацикливании (для endless-режима).
     private int _waveNumber = 0;
 
-    // Всегда берём актуального игрока через свойство.
-    // Если игрок пересоздался — мы автоматически получим нового.
     private Transform Player =>
         PlayerMovement.Instance != null ? PlayerMovement.Instance.transform : null;
 
@@ -122,12 +118,10 @@ public class WaveSpawner : MonoBehaviour
             if (++safety > 10_000) yield break;
         }
 
-        if (_verboseLogs) Debug.Log("[WaveSpawner] Все волны пройдены.");
     }
 
     private IEnumerator RunWave(Wave wave)
     {
-        if (_verboseLogs) Debug.Log($"[WaveSpawner] Волна '{wave.name}' стартовала.");
         _aliveFromCurrentWave.Clear();
 
         int active = wave.groups.Count;
@@ -141,7 +135,6 @@ public class WaveSpawner : MonoBehaviour
         if (wave.waitForClear)
         {
             while (HasAliveFromCurrentWave()) yield return null;
-            if (_verboseLogs) Debug.Log($"[WaveSpawner] Волна '{wave.name}' зачищена.");
         }
     }
 
@@ -149,7 +142,6 @@ public class WaveSpawner : MonoBehaviour
     {
         if (group.enemyPrefab == null)
         {
-            Debug.LogWarning("[WaveSpawner] У группы пуст префаб врага.");
             onDone?.Invoke();
             yield break;
         }
@@ -170,14 +162,11 @@ public class WaveSpawner : MonoBehaviour
 
     private void SpawnOne(GameObject prefab)
     {
-        // Если игрока вообще нет (например, помер и сцена пересоздаётся) —
-        // просто пропускаем спавн, ничего страшного.
         if (Player == null) return;
 
         if (!TryFindSpawnPoint(out Vector3 pos))
         {
             pos = Player.position;
-            if (_verboseLogs) Debug.LogWarning("[WaveSpawner] Не нашёл проходимую точку, фоллбэк на игрока.");
         }
 
         GameObject instance = Instantiate(prefab, pos, Quaternion.identity);

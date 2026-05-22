@@ -40,7 +40,7 @@ public class UpgradeCard : MonoBehaviour
 
     private void ApplyCyberpunkStyle(UpgradeData data)
     {
-        Color borderColor = ColorForType(data.type) * 2.5f; // HDR — bloom подхватит
+        Color borderColor = ColorForType(data.type) * 2.5f;
         var rt = transform as RectTransform;
         if (rt != null) CyberpunkUI.AddNeonBorder(rt, borderColor, 2f);
 
@@ -70,8 +70,6 @@ public class UpgradeCard : MonoBehaviour
     {
         if (_canvasGroup == null) yield break;
 
-        // Только alpha: position контролирует HorizontalLayoutGroup, конкурировать нельзя
-        // — иначе targetPos захватывается до layout-пасса и все карточки слипаются в одну точку.
         _canvasGroup.alpha = 0f;
 
         float delay = transform.GetSiblingIndex() * 0.08f;

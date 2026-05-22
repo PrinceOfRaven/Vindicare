@@ -10,9 +10,9 @@ public class CallTransit : MonoBehaviour
 
     public static CallTransit Instance => _instance;
 
-    private void Awake() 
+    private void Awake()
     {
-        if (_instance != null) 
+        if (_instance != null)
         {
             Destroy(gameObject);
             return;
@@ -27,26 +27,24 @@ public class CallTransit : MonoBehaviour
         LevelTransition.Instance.FadeIn(null);
     }
 
-
-    public void LoadScene(string sceneName) 
+    public void LoadScene(string sceneName)
     {
         if (_isLoading && SceneManager.GetActiveScene().name != sceneName)
         {
-            StopCoroutine(_currentCoroutine); 
+            StopCoroutine(_currentCoroutine);
         }
 
         if (_currentCoroutine != null) StopCoroutine(_currentCoroutine);
         _currentCoroutine = StartCoroutine(SceneLoadRoutine(sceneName));
     }
 
-    private IEnumerator SceneLoadRoutine(string sceneName) 
+    private IEnumerator SceneLoadRoutine(string sceneName)
     {
         _isLoading = true;
 
         bool waitFading = true;
         LevelTransition.Instance.FadeOut(() => waitFading = false);
         while (waitFading) yield return null;
-
 
         var async = SceneManager.LoadSceneAsync(sceneName);
         async.allowSceneActivation = false;

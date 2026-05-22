@@ -1,10 +1,5 @@
 using UnityEngine;
 
-/// <summary>
-/// Кристалл опыта. Дропают враги при смерти.
-/// Когда игрок в радиусе PlayerStats.PickupRadius — летит к нему,
-/// при касании — добавляет опыт.
-/// </summary>
 public class ExperienceOrb : MonoBehaviour
 {
     [Header("Сколько опыта даёт")]
@@ -27,7 +22,6 @@ public class ExperienceOrb : MonoBehaviour
 
     private void LateUpdate()
     {
-        // Лёгкое вращение, не трогает position чтобы не конфликтовать с чейзом
         transform.Rotate(0f, 0f, 140f * Time.deltaTime, Space.Self);
     }
 
@@ -42,17 +36,14 @@ public class ExperienceOrb : MonoBehaviour
             ? PlayerStats.Instance.PickupRadius
             : 1.5f;
 
-        // Слишком далеко — лежим и ждём
         if (dist > pickupRadius) return;
 
-        // Подбор по контакту
         if (dist <= _collectDistance)
         {
             Collect();
             return;
         }
 
-        // Летим к игроку, ускоряясь
         Vector3 dir = (_player.position - transform.position).normalized;
         _currentSpeed += _acceleration * Time.deltaTime;
         transform.position += dir * _currentSpeed * Time.deltaTime;

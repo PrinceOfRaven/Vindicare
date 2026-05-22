@@ -1,9 +1,5 @@
 using UnityEngine;
 
-/// <summary>
-/// Кратковременно перекрашивает все SpriteRenderer'ы в белый при попадании.
-/// Авто-инициализируется (находит детей при первом Flash). Без зависимостей.
-/// </summary>
 public class HitFlash : MonoBehaviour
 {
     [SerializeField] private Color _flashColor = Color.white;

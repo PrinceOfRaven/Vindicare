@@ -1,11 +1,5 @@
 using UnityEngine;
 
-/// <summary>
-/// Аптечка. С небольшим шансом дропается с убитых врагов (см. EnemyBase).
-/// Когда игрок в радиусе PlayerStats.PickupRadius — летит к нему, при касании
-/// лечит игрока. Визуал (красный крест + свет) строится целиком в рантайме,
-/// поэтому префаб не нужен.
-/// </summary>
 public class HealthOrb : MonoBehaviour
 {
     static readonly Color OrbColor = new Color(1f, 0.28f, 0.34f);
@@ -19,7 +13,6 @@ public class HealthOrb : MonoBehaviour
     private float _bobTimer;
     private bool _collected;
 
-    /// <summary>Создать аптечку в мире.</summary>
     public static HealthOrb Spawn(Vector3 position, int healAmount)
     {
         var go = new GameObject("HealthOrb");
@@ -43,7 +36,6 @@ public class HealthOrb : MonoBehaviour
 
     private void Update()
     {
-        // Лёгкая пульсация — чтобы аптечка читалась как подбираемый предмет
         _bobTimer += Time.deltaTime;
         float s = 1f + 0.12f * Mathf.Sin(_bobTimer * 4f);
         transform.localScale = new Vector3(s, s, 1f);
@@ -57,7 +49,6 @@ public class HealthOrb : MonoBehaviour
             ? PlayerStats.Instance.PickupRadius
             : 1.5f;
 
-        // Слишком далеко — лежим и ждём
         if (dist > pickupRadius) return;
 
         if (dist <= _collectDistance)
@@ -66,7 +57,6 @@ public class HealthOrb : MonoBehaviour
             return;
         }
 
-        // Летим к игроку, ускоряясь
         Vector3 dir = (player.position - transform.position).normalized;
         _currentSpeed += _acceleration * Time.deltaTime;
         transform.position += dir * _currentSpeed * Time.deltaTime;
@@ -80,8 +70,6 @@ public class HealthOrb : MonoBehaviour
             PlayerMovement.Instance.Heal(_healAmount);
         Destroy(gameObject);
     }
-
-    // ─── Процедурный спрайт креста-аптечки ───
 
     static Sprite _crossSprite;
 

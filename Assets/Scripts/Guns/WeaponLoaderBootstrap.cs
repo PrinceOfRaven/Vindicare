@@ -1,11 +1,6 @@
 using UnityEngine;
 using UnityEngine.SceneManagement;
 
-/// <summary>
-/// Автоматически вешает PlayerWeaponLoader на игрока в SampleScene без правки самой сцены.
-/// Это нужно, чтобы выбор оружия в PlayerHub применялся на персонажа в рейде,
-/// при этом сама сцена в гите остаётся нетронутой.
-/// </summary>
 public static class WeaponLoaderBootstrap
 {
     private const string RaidSceneName = "SampleScene";
@@ -26,7 +21,6 @@ public static class WeaponLoaderBootstrap
         GameObject player = GameObject.FindGameObjectWithTag(PlayerTag);
         if (player == null)
         {
-            Debug.LogWarning($"[WeaponLoaderBootstrap] В сцене '{RaidSceneName}' не найден объект с тегом '{PlayerTag}'.");
             return;
         }
         if (player.GetComponent<PlayerWeaponLoader>() != null) return;

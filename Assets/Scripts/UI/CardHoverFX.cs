@@ -1,10 +1,6 @@
 using UnityEngine;
 using UnityEngine.EventSystems;
 
-/// <summary>
-/// Лёгкий hover-эффект для UI-карточек: масштабирует объект к 1.05 при наведении,
-/// возвращает к 1.0 при выходе. Работает на unscaledDeltaTime (когда timeScale=0).
-/// </summary>
 public class CardHoverFX : MonoBehaviour, IPointerEnterHandler, IPointerExitHandler
 {
     [SerializeField] private float _hoverScale = 1.05f;
