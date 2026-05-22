@@ -83,6 +83,9 @@ public class GunsBase : MonoBehaviour
         float damageMult = PlayerStats.Instance != null ? PlayerStats.Instance.DamageMultiplier : 1f;
         int totalBullets = _bulletCount + (PlayerStats.Instance != null ? PlayerStats.Instance.ExtraProjectiles : 0);
 
+        AudioFX.Shoot();
+        CyberpunkFX.MuzzleFlash(_muzzle.position, CyberpunkFX.Cyan);
+
         for (int i = 0; i < totalBullets; i++)
         {
             float angleOffset = (totalBullets > 1) ? -_firingSpread / 2f + i * (_firingSpread / (totalBullets - 1)) : 0f;

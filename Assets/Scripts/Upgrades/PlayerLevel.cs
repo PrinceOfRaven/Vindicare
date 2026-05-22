@@ -51,6 +51,7 @@ public class PlayerLevel : MonoBehaviour
             OnLevelUp?.Invoke(_currentLevel);
 
             CyberpunkFX.Shake(0.18f, 0.25f);
+            AudioFX.LevelUp();
 
             if (UpgradeManager.Instance != null)
                 UpgradeManager.Instance.OfferUpgrades();

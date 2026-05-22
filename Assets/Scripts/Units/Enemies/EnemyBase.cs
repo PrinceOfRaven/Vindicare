@@ -87,6 +87,8 @@ public abstract class EnemyBase : UnitsBase
     {
         CyberpunkFX.SpawnDeathBurst(transform.position, CyberpunkFX.Magenta);
         CyberpunkFX.Shake(0.08f, 0.10f);
+        CyberpunkFX.HitStopThrottled(0.05f);
+        AudioFX.EnemyDeath();
 
         if (_xpOrbPrefab != null && Random.value <= _xpDropChance)
         {

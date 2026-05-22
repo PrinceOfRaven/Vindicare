@@ -129,6 +129,7 @@ public class PlayerMovement : UnitsBase
         RaiseDeath();
         CyberpunkFX.SpawnDeathBurst(transform.position, CyberpunkFX.HotRed);
         CyberpunkFX.Shake(0.35f, 0.5f);
+        AudioFX.PlayerDeath();
         if (GameOverUI.Instance != null)
             GameOverUI.Instance.Show();
     }

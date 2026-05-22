@@ -142,12 +142,14 @@ public class GameOverUI : MonoBehaviour
 
     public void Restart()
     {
+        AudioFX.UIClick();
         Time.timeScale = 1f;
         SceneManager.LoadScene(SceneManager.GetActiveScene().name);
     }
 
     public void ToMenu()
     {
+        AudioFX.UIClick();
         Time.timeScale = 1f;
         CallTransit.Instance.LoadScene("MainMenu");
     }

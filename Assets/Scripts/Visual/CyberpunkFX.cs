@@ -140,6 +140,15 @@ public static class CyberpunkFX
         ((FXRunner)_runner).DoHitStop(seconds);
     }
 
+    static float _lastThrottledHitStop = -10f;
+
+    public static void HitStopThrottled(float seconds, float minInterval = 0.12f)
+    {
+        if (Time.realtimeSinceStartup - _lastThrottledHitStop < minInterval) return;
+        _lastThrottledHitStop = Time.realtimeSinceStartup;
+        HitStop(seconds);
+    }
+
     public static void DamagePopup(Vector3 worldPos, float amount, Color? color = null)
     {
         if (_runner == null) EnsureRunner();
@@ -151,6 +160,13 @@ public static class CyberpunkFX
         var ps = BuildBurst(pos, color, count: 10, lifetime: 0.35f, sizeMin: 0.06f, sizeMax: 0.16f, speed: 5f, scatter: 360f);
         ps.gameObject.AddComponent<DestroyAfter>().lifetime = 0.6f;
         AddLightFlash(ps.gameObject, color, intensity: 1.8f, radius: 1.6f, duration: 0.18f);
+    }
+
+    public static void MuzzleFlash(Vector3 pos, Color color)
+    {
+        var ps = BuildBurst(pos, color, count: 6, lifetime: 0.16f, sizeMin: 0.05f, sizeMax: 0.13f, speed: 4f, scatter: 360f);
+        ps.gameObject.AddComponent<DestroyAfter>().lifetime = 0.35f;
+        AddLightFlash(ps.gameObject, color, intensity: 2.4f, radius: 1.5f, duration: 0.08f);
     }
 
     public static void SpawnDeathBurst(Vector3 pos, Color color)

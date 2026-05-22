@@ -53,6 +53,7 @@ public class ExperienceOrb : MonoBehaviour
     {
         _collected = true;
         CyberpunkFX.SpawnPickupPop(transform.position, CyberpunkFX.Lime);
+        AudioFX.Pickup();
         if (PlayerLevel.Instance != null)
             PlayerLevel.Instance.AddExperience(_xpAmount);
         Destroy(gameObject);

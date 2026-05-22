@@ -66,6 +66,7 @@ public class HealthOrb : MonoBehaviour
     {
         _collected = true;
         CyberpunkFX.SpawnPickupPop(transform.position, CyberpunkFX.HotRed);
+        AudioFX.Pickup();
         if (PlayerMovement.Instance != null)
             PlayerMovement.Instance.Heal(_healAmount);
         Destroy(gameObject);

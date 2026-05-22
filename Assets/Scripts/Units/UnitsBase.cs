@@ -36,8 +36,19 @@ public abstract class UnitsBase : MonoBehaviour
         if (flash == null) flash = gameObject.AddComponent<HitFlash>();
         flash.Flash();
 
-        Color popupColor = this is EnemyBase ? Color.white : CyberpunkFX.HotRed;
+        bool isEnemy = this is EnemyBase;
+        Color popupColor = isEnemy ? Color.white : CyberpunkFX.HotRed;
         CyberpunkFX.DamagePopup(transform.position, dmg, popupColor);
+
+        if (isEnemy)
+        {
+            AudioFX.EnemyHit();
+            CyberpunkFX.HitStopThrottled(0.018f);
+        }
+        else
+        {
+            AudioFX.PlayerHit();
+        }
 
         if (_health <= 0)
         {

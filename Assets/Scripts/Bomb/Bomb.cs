@@ -94,6 +94,7 @@ public class Bomb : MonoBehaviour
 
         CyberpunkFX.SpawnExplosion(transform.position, _explosionRadius, CyberpunkFX.Magenta);
         CyberpunkFX.Shake(0.5f, 0.4f);
+        AudioFX.Explosion();
 
         if (_explosionPrefab != null)
         {

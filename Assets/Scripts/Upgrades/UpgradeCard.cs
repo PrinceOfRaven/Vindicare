@@ -32,7 +32,11 @@ public class UpgradeCard : MonoBehaviour
         }
 
         _button.onClick.RemoveAllListeners();
-        _button.onClick.AddListener(() => _onClick?.Invoke(_data));
+        _button.onClick.AddListener(() =>
+        {
+            AudioFX.UIClick();
+            _onClick?.Invoke(_data);
+        });
 
         ApplyCyberpunkStyle(data);
         PlayEntranceAnimation();

@@ -37,7 +37,11 @@ public class StartRaidMenu : MonoBehaviour
             WeaponSlot slot = _slots[i];
 
             if (slot.button == null) continue;
-            slot.button.onClick.AddListener(() => SelectWeapon(captured));
+            slot.button.onClick.AddListener(() =>
+            {
+                AudioFX.UIClick();
+                SelectWeapon(captured);
+            });
 
             if (slot.iconImage != null && slot.data != null && slot.data.icon != null)
                 slot.iconImage.sprite = slot.data.icon;
@@ -47,12 +51,43 @@ public class StartRaidMenu : MonoBehaviour
 
             if (slot.selectedHighlight != null)
                 slot.selectedHighlight.SetActive(false);
+
+            StyleSlot(slot);
         }
+
+        if (_startButton != null)
+        {
+            var rt = _startButton.transform as RectTransform;
+            if (rt != null)
+                CyberpunkUI.AddNeonBorder(rt, new Color(0.45f, 1f, 0.30f) * 2.2f, 2.5f);
+        }
+        if (_startButtonLabel != null)
+            CyberpunkUI.StyleTMP(_startButtonLabel, Color.white, Color.black, 0.25f);
 
         if (_defaultIndex >= 0 && _defaultIndex < _slots.Count)
             SelectWeapon(_defaultIndex);
         else
             RefreshStartButton();
+    }
+
+    private static void StyleSlot(WeaponSlot slot)
+    {
+        var rt = slot.button.transform as RectTransform;
+        if (rt != null)
+            CyberpunkUI.AddNeonBorder(rt, new Color(0f, 0.85f, 1f) * 2.2f, 2f);
+
+        if (slot.label != null)
+        {
+            CyberpunkUI.StyleTMP(slot.label, Color.white, Color.black, 0.22f);
+            slot.label.raycastTarget = false;
+        }
+
+        if (slot.selectedHighlight != null
+            && slot.selectedHighlight.TryGetComponent(out UnityEngine.UI.Image highlightImg))
+        {
+            highlightImg.color = new Color(0f, 1f, 0.88f, 0.28f);
+            highlightImg.raycastTarget = false;
+        }
     }
 
     public void SelectWeapon(int index)
