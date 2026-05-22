@@ -23,6 +23,8 @@ public class PlayerMovement : UnitsBase
     private float _lastFacingY = -1f; // -1 значит "смотрит вниз" по умолчанию
 
     public Vector2 FacingDirection => new Vector2(_lastFacingX, _lastFacingY);
+    public SpriteRenderer BodySprite => _sr;
+    public Vector2 MoveInput => _moveInput;
 
     protected override void Awake()
     {
@@ -37,6 +39,36 @@ public class PlayerMovement : UnitsBase
         CacheMaxHealth();
 
         if (_sr == null) _sr = GetComponent<SpriteRenderer>();
+        EnsureChildSprite();
+    }
+
+    /// <summary>
+    /// Если спрайт игрока висит на корне (там физика и коллайдер), переносим
+    /// рендер на дочерний объект — тогда его можно анимировать масштабом/позицией,
+    /// не трогая физику. Дальше PlayerMovement работает уже с дочерним спрайтом.
+    /// </summary>
+    private void EnsureChildSprite()
+    {
+        if (_sr == null || _sr.transform != transform) return;
+
+        var rootSr = _sr;
+        var child = new GameObject("Body");
+        child.transform.SetParent(transform, false);
+        child.layer = gameObject.layer;
+
+        var childSr = child.AddComponent<SpriteRenderer>();
+        childSr.sprite          = rootSr.sprite;
+        childSr.sharedMaterial  = rootSr.sharedMaterial;
+        childSr.color           = rootSr.color;
+        childSr.flipX           = rootSr.flipX;
+        childSr.flipY           = rootSr.flipY;
+        childSr.sortingLayerID  = rootSr.sortingLayerID;
+        childSr.sortingOrder    = rootSr.sortingOrder;
+        childSr.maskInteraction = rootSr.maskInteraction;
+        childSr.spriteSortPoint = rootSr.spriteSortPoint;
+
+        rootSr.enabled = false;  // рендер с корня убираем — рисует дочерний
+        _sr = childSr;
     }
 
     private void OnDestroy()
@@ -128,5 +160,9 @@ public class PlayerMovement : UnitsBase
     {
         // Тёплый янтарный point-light вокруг игрока
         CyberpunkFX.AttachLight(transform, CyberpunkFX.Amber, intensity: 1.1f, outerRadius: 4.5f, innerRadius: 0.3f);
+
+        // Анимация ходьбы (покачивание + squash/stretch) — без правок сцены
+        if (GetComponent<PlayerWalkAnimation>() == null)
+            gameObject.AddComponent<PlayerWalkAnimation>();
     }
 }
