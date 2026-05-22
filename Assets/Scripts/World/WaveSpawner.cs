@@ -28,6 +28,9 @@ public class WaveSpawner : MonoBehaviour
 
         [Tooltip("Если true — следующая волна стартует только после смерти всех врагов этой волны (для босса/мини-босса).")]
         public bool waitForClear = false;
+
+        [Tooltip("Если true — старт волны сопровождается боссовым баннером и экранным эффектом.")]
+        public bool isBossWave = false;
     }
 
     [Header("Волны")]
@@ -57,14 +60,33 @@ public class WaveSpawner : MonoBehaviour
     [Header("Дебаг")]
     [SerializeField] private bool _verboseLogs = true;
 
+    public static WaveSpawner Instance { get; private set; }
+
+    /// <summary>Срабатывает при старте волны. Аргументы: накопительный номер волны (1..N) и сама волна.</summary>
+    public event Action<int, Wave> OnWaveStarted;
+
     private readonly HashSet<UnitsBase> _aliveFromCurrentWave = new HashSet<UnitsBase>();
     private int _currentWaveIndex = -1;
     public int CurrentWaveIndex => _currentWaveIndex;
+
+    // Накопительный номер волны — не сбрасывается при зацикливании (для endless-режима).
+    private int _waveNumber = 0;
 
     // Всегда берём актуального игрока через свойство.
     // Если игрок пересоздался — мы автоматически получим нового.
     private Transform Player =>
         PlayerMovement.Instance != null ? PlayerMovement.Instance.transform : null;
+
+    private void Awake()
+    {
+        if (Instance != null && Instance != this) { Destroy(this); return; }
+        Instance = this;
+    }
+
+    private void OnDestroy()
+    {
+        if (Instance == this) Instance = null;
+    }
 
     private void Start()
     {
@@ -87,6 +109,8 @@ public class WaveSpawner : MonoBehaviour
             for (int i = 0; i < _waves.Count; i++)
             {
                 _currentWaveIndex = i;
+                _waveNumber++;
+                OnWaveStarted?.Invoke(_waveNumber, _waves[i]);
                 yield return RunWave(_waves[i]);
 
                 if (i < _waves.Count - 1 || _loopWaves)

@@ -77,6 +77,12 @@ public abstract class EnemyBase : UnitsBase
     [SerializeField, Range(0f, 1f)] protected float _xpDropChance = 1f;
     [SerializeField, Min(1)] protected int _xpOrbCount = 1;
 
+    [Header("Дроп аптечки")]
+    [Tooltip("Шанс выронить аптечку при смерти (0..1). Держи маленьким — это редкий бонус.")]
+    [SerializeField, Range(0f, 1f)] protected float _healthDropChance = 0.05f;
+    [Tooltip("Сколько HP восстанавливает выпавшая аптечка.")]
+    [SerializeField, Min(1)] protected int _healthOrbHeal = 25;
+
     protected override void onObjectDeath()
     {
         CyberpunkFX.SpawnDeathBurst(transform.position, CyberpunkFX.Magenta);
@@ -90,6 +96,13 @@ public abstract class EnemyBase : UnitsBase
                 Instantiate(_xpOrbPrefab, transform.position + (Vector3)offset, Quaternion.identity);
             }
         }
+
+        if (Random.value < _healthDropChance)
+        {
+            Vector2 offset = Random.insideUnitCircle * 0.3f;
+            HealthOrb.Spawn(transform.position + (Vector3)offset, _healthOrbHeal);
+        }
+
         if (HUD.Instance != null) HUD.Instance.RegisterKill();
         base.onObjectDeath();
     }

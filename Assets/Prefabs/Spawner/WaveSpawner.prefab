@@ -146,6 +146,7 @@ MonoBehaviour:
       spawnInterval: 1
       burstSize: 1
     waitForClear: 1
+    isBossWave: 1
   _initialDelay: 3
   _delayBetweenWaves: 5
   _loopWaves: 1

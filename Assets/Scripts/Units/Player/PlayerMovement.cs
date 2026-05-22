@@ -133,6 +133,14 @@ public class PlayerMovement : UnitsBase
         _health = Mathf.Min(_health + bonusHP, _maxHealth);
     }
 
+    /// <summary>Восстановить здоровье (от аптечки). Не превышает максимум.</summary>
+    public void Heal(int amount)
+    {
+        if (amount <= 0 || !IsAlive) return;
+        _health = Mathf.Min(_health + amount, _maxHealth);
+        CyberpunkFX.DamagePopup(transform.position, amount, CyberpunkFX.Lime);
+    }
+
     protected override void onObjectDeath()
     {
         RaiseDeath();

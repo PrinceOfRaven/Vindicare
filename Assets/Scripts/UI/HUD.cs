@@ -39,6 +39,13 @@ public class HUD : MonoBehaviour
     private Image _hpFillImg;
     private Image _xpFillImg;
 
+    private TMP_Text _waveText;
+    private TMP_Text _bossBanner;
+    private Image _bossOverlay;
+    private float _bannerTimer;
+    private const float BannerDuration = 3.5f;
+    private static readonly Color BossColor = new Color(1f, 0.2f, 0.25f);
+
     public float RunTime => _runTime;
     public int Kills => _kills;
 
@@ -56,6 +63,8 @@ public class HUD : MonoBehaviour
             PlayerLevel.Instance.OnXPChanged -= UpdateXP;
             PlayerLevel.Instance.OnLevelUp   -= HandleLevelUp;
         }
+        if (WaveSpawner.Instance != null)
+            WaveSpawner.Instance.OnWaveStarted -= HandleWaveStarted;
     }
 
     private void Start()
@@ -105,6 +114,76 @@ public class HUD : MonoBehaviour
         if (_timerText != null) _timerText.fontSize = 30f;
         if (_killsText != null) _killsText.fontSize = 22f;
         if (_levelText != null) _levelText.fontSize = 18f;
+
+        BuildWaveUI();
+        if (WaveSpawner.Instance != null)
+            WaveSpawner.Instance.OnWaveStarted += HandleWaveStarted;
+    }
+
+    /// <summary>
+    /// Создаёт runtime-элементы волн: постоянный счётчик «ВОЛНА N», боссовый
+    /// баннер по центру и полноэкранную красную заливку-вспышку.
+    /// </summary>
+    private void BuildWaveUI()
+    {
+        var canvas = GetComponentInParent<Canvas>();
+        Transform root = canvas != null ? canvas.transform : transform;
+
+        _waveText = CreateText("WaveCounter", root,
+            anchor: new Vector2(0.5f, 1f), pivot: new Vector2(0.5f, 1f),
+            pos: new Vector2(0f, -50f), size: new Vector2(260f, 28f));
+        _waveText.alignment = TextAlignmentOptions.Center;
+        _waveText.fontSize = 20f;
+        _waveText.text = string.Empty;
+        CyberpunkUI.StyleTMP(_waveText, new Color(0f, 0.85f, 1f), Color.black, 0.25f);
+
+        var overlayGo = new GameObject("BossOverlay",
+            typeof(RectTransform), typeof(CanvasRenderer), typeof(Image));
+        var ort = (RectTransform)overlayGo.transform;
+        ort.SetParent(root, false);
+        ort.anchorMin = Vector2.zero;
+        ort.anchorMax = Vector2.one;
+        ort.offsetMin = Vector2.zero;
+        ort.offsetMax = Vector2.zero;
+        ort.SetAsFirstSibling();
+        _bossOverlay = overlayGo.GetComponent<Image>();
+        _bossOverlay.color = new Color(0.8f, 0f, 0.05f, 0f);
+        _bossOverlay.raycastTarget = false;
+
+        _bossBanner = CreateText("BossBanner", root,
+            anchor: new Vector2(0.5f, 0.5f), pivot: new Vector2(0.5f, 0.5f),
+            pos: new Vector2(0f, 90f), size: new Vector2(960f, 130f));
+        _bossBanner.alignment = TextAlignmentOptions.Center;
+        _bossBanner.fontSize = 64f;
+        CyberpunkUI.StyleTMP(_bossBanner, BossColor, Color.black, 0.3f);
+        _bossBanner.alpha = 0f;
+    }
+
+    private static TMP_Text CreateText(string objName, Transform parent, Vector2 anchor,
+                                       Vector2 pivot, Vector2 pos, Vector2 size)
+    {
+        var go = new GameObject(objName, typeof(RectTransform));
+        var rt = (RectTransform)go.transform;
+        rt.SetParent(parent, false);
+        rt.anchorMin        = anchor;
+        rt.anchorMax        = anchor;
+        rt.pivot            = pivot;
+        rt.anchoredPosition = pos;
+        rt.sizeDelta        = size;
+        var text = go.AddComponent<TextMeshProUGUI>();
+        text.raycastTarget = false;
+        return text;
+    }
+
+    private void HandleWaveStarted(int number, WaveSpawner.Wave wave)
+    {
+        if (_waveText != null) _waveText.text = $"ВОЛНА {number}";
+
+        if (wave != null && wave.isBossWave && _bossBanner != null)
+        {
+            _bossBanner.text = $"БОСС: {wave.name}";
+            _bannerTimer = BannerDuration;
+        }
     }
 
     /// <summary>
@@ -311,6 +390,59 @@ public class HUD : MonoBehaviour
                 _xpDisplay = Mathf.MoveTowards(_xpDisplay, _xpTarget, 2.5f * dt);
             }
             _xpSlider.value = _xpDisplay;
+        }
+
+        UpdateBossBanner();
+    }
+
+    /// <summary>Анимация боссового баннера и экранной вспышки (unscaled time).</summary>
+    private void UpdateBossBanner()
+    {
+        if (_bannerTimer <= 0f) return;
+
+        _bannerTimer -= Time.unscaledDeltaTime;
+        float elapsed = BannerDuration - _bannerTimer;
+
+        // Баннер: быстрый fade-in → удержание → fade-out + лёгкая пульсация.
+        float alpha;
+        if (elapsed < 0.35f)         alpha = elapsed / 0.35f;
+        else if (_bannerTimer < 0.9f) alpha = Mathf.Max(0f, _bannerTimer / 0.9f);
+        else                          alpha = 1f;
+
+        if (_bossBanner != null)
+        {
+            _bossBanner.alpha = alpha;
+            float pulse = 1f + 0.05f * Mathf.Sin(elapsed * 6f);
+            _bossBanner.rectTransform.localScale = new Vector3(pulse, pulse, 1f);
+        }
+
+        // Оверлей: затухающая пульсирующая красная вспышка.
+        if (_bossOverlay != null)
+        {
+            float oa = 0f;
+            if (elapsed < 1.6f)
+            {
+                float k = 1f - elapsed / 1.6f;
+                oa = 0.32f * k * k * (0.55f + 0.45f * Mathf.Abs(Mathf.Sin(elapsed * 7f)));
+            }
+            var c = _bossOverlay.color;
+            c.a = oa;
+            _bossOverlay.color = c;
+        }
+
+        if (_bannerTimer <= 0f)
+        {
+            if (_bossBanner != null)
+            {
+                _bossBanner.alpha = 0f;
+                _bossBanner.rectTransform.localScale = Vector3.one;
+            }
+            if (_bossOverlay != null)
+            {
+                var c = _bossOverlay.color;
+                c.a = 0f;
+                _bossOverlay.color = c;
+            }
         }
     }
 
