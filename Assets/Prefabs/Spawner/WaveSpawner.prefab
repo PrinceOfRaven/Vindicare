@@ -59,6 +59,13 @@ MonoBehaviour:
       spawnInterval: 0.7
       burstSize: 2
     waitForClear: 0
+  - name: Runners
+    groups:
+    - enemyPrefab: {fileID: 7100000000000000001, guid: c1b9a57f4e1143068eef44c061941702, type: 3}
+      count: 25
+      spawnInterval: 0.8
+      burstSize: 5
+    waitForClear: 0
   - name: Pack
     groups:
     - enemyPrefab: {fileID: 6225669282712092493, guid: 096a80c1973562d4b92fabd2050d09e0, type: 3}
@@ -70,16 +77,78 @@ MonoBehaviour:
       spawnInterval: 0.5
       burstSize: 2
     waitForClear: 0
+  - name: Swarm
+    groups:
+    - enemyPrefab: {fileID: 7300000000000000001, guid: adb4e787a2b14495b863b8ed4bff8517, type: 3}
+      count: 40
+      spawnInterval: 0.5
+      burstSize: 15
+    waitForClear: 0
+  - name: Stalkers
+    groups:
+    - enemyPrefab: {fileID: 7400000000000000001, guid: 01e51da409d549f4b0a4d70daf210f68, type: 3}
+      count: 12
+      spawnInterval: 1
+      burstSize: 2
+    waitForClear: 0
+  - name: First Elite
+    groups:
+    - enemyPrefab: {fileID: 7400000000000000001, guid: 01e51da409d549f4b0a4d70daf210f68, type: 3}
+      count: 10
+      spawnInterval: 1.2
+      burstSize: 2
+    - enemyPrefab: {fileID: 7700000000000000001, guid: c738513ab72c4e54a61485093bdd71b1, type: 3}
+      count: 1
+      spawnInterval: 5
+      burstSize: 1
+    waitForClear: 0
+  - name: Brutes
+    groups:
+    - enemyPrefab: {fileID: 7200000000000000001, guid: 15a34328bd4646958b1cad06f22744fc, type: 3}
+      count: 8
+      spawnInterval: 2
+      burstSize: 1
+    - enemyPrefab: {fileID: 7100000000000000001, guid: c1b9a57f4e1143068eef44c061941702, type: 3}
+      count: 20
+      spawnInterval: 0.8
+      burstSize: 4
+    waitForClear: 0
+  - name: Splitter Wave
+    groups:
+    - enemyPrefab: {fileID: 7800000000000000001, guid: 44af10b53e7c40d7bead214e0e1c7a53, type: 3}
+      count: 6
+      spawnInterval: 2.5
+      burstSize: 1
+    - enemyPrefab: {fileID: 7300000000000000001, guid: adb4e787a2b14495b863b8ed4bff8517, type: 3}
+      count: 15
+      spawnInterval: 1
+      burstSize: 3
+    waitForClear: 0
+  - name: Juggernaut Trial
+    groups:
+    - enemyPrefab: {fileID: 7500000000000000001, guid: 0fe53b26ac9b4c99a2610a32c645cc7b, type: 3}
+      count: 4
+      spawnInterval: 3
+      burstSize: 1
+    - enemyPrefab: {fileID: 7400000000000000001, guid: 01e51da409d549f4b0a4d70daf210f68, type: 3}
+      count: 20
+      spawnInterval: 0.9
+      burstSize: 2
+    - enemyPrefab: {fileID: 7600000000000000001, guid: a3e6e0aca9304dc5a1ab8b0417a89edf, type: 3}
+      count: 1
+      spawnInterval: 8
+      burstSize: 1
+    waitForClear: 0
   - name: Queen
     groups:
     - enemyPrefab: {fileID: 3270887730636500774, guid: 83b760d124d80a744a1d3e07fb985314, type: 3}
       count: 1
       spawnInterval: 1
       burstSize: 1
-    waitForClear: 0
+    waitForClear: 1
   _initialDelay: 3
   _delayBetweenWaves: 5
-  _loopWaves: 0
+  _loopWaves: 1
   _camera: {fileID: 0}
   _minSpawnDistance: 12
   _maxSpawnDistance: 20
