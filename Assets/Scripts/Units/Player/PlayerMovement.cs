@@ -13,8 +13,9 @@ public class PlayerMovement : UnitsBase
     private PlayerActionsControl _actions;
     private Vector2 _moveInput;
 
+
     private float _lastFacingX = 1f;
-    private float _lastFacingY = -1f;
+    private float _lastFacingY = -1f; 
 
     public Vector2 FacingDirection => new Vector2(_lastFacingX, _lastFacingY);
     public SpriteRenderer BodySprite => _sr;
@@ -94,11 +95,11 @@ public class PlayerMovement : UnitsBase
 
         if (_lastFacingY > 0f && _backSprite != null)
         {
-            _sr.sprite = _backSprite;
+            _sr.sprite = _backSprite;  
         }
         else if (_frontSprite != null)
         {
-            _sr.sprite = _frontSprite;
+            _sr.sprite = _frontSprite; 
         }
         _sr.flipX = _lastFacingX < 0f;
     }
@@ -129,9 +130,10 @@ public class PlayerMovement : UnitsBase
         RaiseDeath();
         CyberpunkFX.SpawnDeathBurst(transform.position, CyberpunkFX.HotRed);
         CyberpunkFX.Shake(0.35f, 0.5f);
-        AudioFX.PlayerDeath();
         if (GameOverUI.Instance != null)
             GameOverUI.Instance.Show();
+        else
+            Debug.LogError("[PlayerMovement] GameOverUI.Instance == null! Проверь что GameOverPanel в сцене активен.");
     }
 
     public override bool TakeDamage(float amount)

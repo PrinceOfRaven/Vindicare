@@ -1,6 +1,7 @@
 using UnityEngine;
 using UnityEngine.SceneManagement;
 
+
 public static class WeaponLoaderBootstrap
 {
     private const string RaidSceneName = "SampleScene";
@@ -21,6 +22,7 @@ public static class WeaponLoaderBootstrap
         GameObject player = GameObject.FindGameObjectWithTag(PlayerTag);
         if (player == null)
         {
+            Debug.LogWarning($"[WeaponLoaderBootstrap] В сцене '{RaidSceneName}' не найден объект с тегом '{PlayerTag}'.");
             return;
         }
         if (player.GetComponent<PlayerWeaponLoader>() != null) return;
