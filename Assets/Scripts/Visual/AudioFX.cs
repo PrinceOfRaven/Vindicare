@@ -12,7 +12,8 @@ public static class AudioFX
     static int _sfxIndex;
     static bool _ready;
 
-    static AudioClip _shoot, _enemyHit, _enemyDeath, _playerHit, _playerDeath,
+    static AudioClip _shoot, _shootRifle, _shootShotgun, _shootSniper,
+                     _enemyHit, _enemyDeath, _playerHit, _playerDeath,
                      _pickup, _levelUp, _explosion, _uiClick;
 
     static float _lastShootTime = -10f;
@@ -79,6 +80,28 @@ public static class AudioFX
         Play(_shoot, 0.30f, 0.92f, 1.09f);
     }
 
+    public static void ShootRifle()
+    {
+        if (!_ready) return;
+        if (Time.unscaledTime - _lastShootTime < 0.04f) return;
+        _lastShootTime = Time.unscaledTime;
+        Play(_shootRifle, 0.34f, 0.95f, 1.06f);
+    }
+
+    public static void ShootShotgun()
+    {
+        if (!_ready) return;
+        // Дробовик: два слоя — мясистый бас + резкий верх.
+        Play(_shootShotgun, 0.75f, 0.93f, 1.0f);
+        Play(_shootRifle, 0.25f, 0.8f, 0.9f);
+    }
+
+    public static void ShootSniper()
+    {
+        if (!_ready) return;
+        Play(_shootSniper, 0.7f, 0.97f, 1.03f);
+    }
+
     public static void EnemyHit()
     {
         if (!_ready) return;
@@ -107,6 +130,9 @@ public static class AudioFX
     static void BuildClips()
     {
         _shoot       = BuildShoot();
+        _shootRifle  = BuildShootRifle();
+        _shootShotgun= BuildShootShotgun();
+        _shootSniper = BuildShootSniper();
         _enemyHit    = BuildEnemyHit();
         _enemyDeath  = BuildEnemyDeath();
         _playerHit   = BuildPlayerHit();
@@ -144,6 +170,75 @@ public static class AudioFX
             d[i] = wave * env;
         }
         return Finish("sfx_shoot", d);
+    }
+
+    // Винтовка: резкий короткий «крак» — быстрый свип вниз + шумовой щелчок, очень быстрый спад.
+    static AudioClip BuildShootRifle()
+    {
+        const float dur = 0.09f;
+        var d = Buffer(dur);
+        float phase = 0f;
+        for (int i = 0; i < d.Length; i++)
+        {
+            float t = (float)i / SampleRate;
+            float p = t / dur;
+            float freq = Mathf.Lerp(1500f, 420f, p * p);
+            phase += freq / SampleRate;
+            float cyc = phase - Mathf.Floor(phase);
+            float sq = cyc < 0.5f ? 0.6f : -0.6f;
+            float noise = Random.Range(-1f, 1f) * 0.5f * Mathf.Exp(-t * 90f);
+            float env = Mathf.Exp(-t * 42f);
+            d[i] = Mathf.Clamp((sq * env) + noise, -1f, 1f);
+        }
+        return Finish("sfx_shoot_rifle", d);
+    }
+
+    // Дробовик: низкий жирный «БУХ» — фильтрованный нойз-взрыв + суб-бас + начальный щелчок.
+    static AudioClip BuildShootShotgun()
+    {
+        const float dur = 0.34f;
+        var d = Buffer(dur);
+        float phase = 0f;
+        float lp = 0f;
+        for (int i = 0; i < d.Length; i++)
+        {
+            float t = (float)i / SampleRate;
+            float p = t / dur;
+            float noise = Random.Range(-1f, 1f);
+            lp += (noise - lp) * 0.18f;                 // низкочастотный нойз = «мясо»
+            float boom = lp * 0.9f * Mathf.Exp(-t * 11f);
+            float subFreq = Mathf.Lerp(85f, 38f, p);
+            phase += subFreq / SampleRate;
+            float sub = Mathf.Sin(phase * TwoPi) * 0.8f * Mathf.Exp(-t * 6f);
+            float crack = Random.Range(-1f, 1f) * Mathf.Exp(-t * 120f) * 0.6f;
+            d[i] = Mathf.Clamp(boom + sub + crack, -1f, 1f);
+        }
+        return Finish("sfx_shoot_shotgun", d);
+    }
+
+    // Снайперка: railgun — яркий электро-разряд (свип сверху вниз) + бас-удар + лёгкий «звон».
+    static AudioClip BuildShootSniper()
+    {
+        const float dur = 0.36f;
+        var d = Buffer(dur);
+        float zapPhase = 0f, bassPhase = 0f, ringPhase = 0f;
+        for (int i = 0; i < d.Length; i++)
+        {
+            float t = (float)i / SampleRate;
+            float p = t / dur;
+            float zapFreq = Mathf.Lerp(2600f, 240f, Mathf.Sqrt(p));
+            zapPhase += zapFreq / SampleRate;
+            float zcyc = zapPhase - Mathf.Floor(zapPhase);
+            float zap = (zcyc < 0.5f ? 0.5f : -0.5f) * Mathf.Exp(-t * 13f);
+            float bassFreq = Mathf.Lerp(140f, 46f, p);
+            bassPhase += bassFreq / SampleRate;
+            float bass = Mathf.Sin(bassPhase * TwoPi) * 0.7f * Mathf.Exp(-t * 5f);
+            ringPhase += 1800f / SampleRate;
+            float ring = Mathf.Sin(ringPhase * TwoPi) * 0.18f * Mathf.Exp(-t * 22f);
+            float crack = Random.Range(-1f, 1f) * Mathf.Exp(-t * 70f) * 0.4f;
+            d[i] = Mathf.Clamp(zap + bass + ring + crack, -1f, 1f);
+        }
+        return Finish("sfx_shoot_sniper", d);
     }
 
     static AudioClip BuildEnemyHit()

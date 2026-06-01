@@ -134,6 +134,15 @@ public static class CyberpunkFX
         if (_shake != null) _shake.Shake(amplitude, duration, freq);
     }
 
+    public static void Kick(Vector2 dir, float amount, float duration = 0.12f)
+    {
+        if (_shake == null && Camera.main != null)
+        {
+            _shake = Camera.main.GetComponent<CameraShake>() ?? Camera.main.gameObject.AddComponent<CameraShake>();
+        }
+        if (_shake != null) _shake.Kick(dir, amount, duration);
+    }
+
     public static void HitStop(float seconds)
     {
         if (_runner == null) EnsureRunner();
@@ -164,9 +173,20 @@ public static class CyberpunkFX
 
     public static void MuzzleFlash(Vector3 pos, Color color)
     {
-        var ps = BuildBurst(pos, color, count: 6, lifetime: 0.16f, sizeMin: 0.05f, sizeMax: 0.13f, speed: 4f, scatter: 360f);
-        ps.gameObject.AddComponent<DestroyAfter>().lifetime = 0.35f;
-        AddLightFlash(ps.gameObject, color, intensity: 2.4f, radius: 1.5f, duration: 0.08f);
+        MuzzleFlash(pos, color, Random.Range(0f, 360f), 1f);
+    }
+
+    /// <summary>Направленная вспышка-конус у дула вдоль выстрела. scale масштабирует «мощь».</summary>
+    public static void MuzzleFlash(Vector3 pos, Color color, float angleDeg, float scale)
+    {
+        // Узкий конус ярких стримеров вперёд по стволу — читается как настоящая вспышка, а не пыль.
+        const float cone = 34f;
+        var ps = BuildBurst(pos, color, count: 9, lifetime: 0.1f,
+                            sizeMin: 0.14f * scale, sizeMax: 0.34f * scale,
+                            speed: 11f * scale, scatter: cone);
+        ps.transform.rotation = Quaternion.Euler(0f, 0f, angleDeg - cone * 0.5f);
+        ps.gameObject.AddComponent<DestroyAfter>().lifetime = 0.3f;
+        AddLightFlash(ps.gameObject, color, intensity: 3.6f, radius: 2.2f * scale, duration: 0.07f);
     }
 
     public static void SpawnDeathBurst(Vector3 pos, Color color)
@@ -330,6 +350,72 @@ public static class CyberpunkFX
         light.falloffIntensity = 0.6f;
         return light;
     }
+
+    /// <summary>Толстый светящийся луч между двумя точками (railgun-выстрел снайперки).</summary>
+    public static void Beam(Vector3 from, Vector3 to, Color color, float width = 0.4f, float duration = 0.12f)
+    {
+        var go = new GameObject("FX_Beam");
+        go.transform.position = (from + to) * 0.5f;
+
+        var lr = go.AddComponent<LineRenderer>();
+        lr.material = TrailMat();
+        lr.useWorldSpace = true;
+        lr.textureMode = LineTextureMode.Stretch;
+        lr.numCapVertices = 6;
+        lr.positionCount = 2;
+        lr.SetPosition(0, from);
+        lr.SetPosition(1, to);
+        lr.startWidth = width;
+        lr.endWidth = width;
+        lr.startColor = color * 2.6f;
+        lr.endColor = color * 2.6f;
+        lr.sortingOrder = 55;
+        go.AddComponent<FXLine>().Setup(duration, width, color * 2.6f);
+
+        AddLightFlash(go, color, intensity: 2.6f, radius: (to - from).magnitude * 0.5f, duration: duration);
+    }
+
+    /// <summary>Зигзаг-разряд между двумя точками (цепная молния рикошета винтовки).</summary>
+    public static void LightningBolt(Vector3 from, Vector3 to, Color color,
+                                     float width = 0.14f, int segments = 8, float jitter = 0.4f, float duration = 0.12f)
+    {
+        var go = new GameObject("FX_Lightning");
+        go.transform.position = (from + to) * 0.5f;
+
+        var lr = go.AddComponent<LineRenderer>();
+        lr.material = TrailMat();
+        lr.useWorldSpace = true;
+        lr.numCapVertices = 2;
+        lr.positionCount = segments + 1;
+
+        Vector3 dir = to - from;
+        Vector3 perp = new Vector3(-dir.y, dir.x, 0f).normalized;
+        for (int i = 0; i <= segments; i++)
+        {
+            float p = (float)i / segments;
+            Vector3 point = Vector3.Lerp(from, to, p);
+            if (i != 0 && i != segments)
+                point += perp * Random.Range(-jitter, jitter);
+            lr.SetPosition(i, point);
+        }
+        lr.startWidth = width;
+        lr.endWidth = width;
+        lr.startColor = color * 2.6f;
+        lr.endColor = color * 2.6f;
+        lr.sortingOrder = 55;
+        go.AddComponent<FXLine>().Setup(duration, width, color * 2.6f);
+
+        AddLightFlash(go, color, intensity: 2f, radius: dir.magnitude * 0.6f + 1f, duration: duration);
+    }
+
+    /// <summary>Отдача у дула: короткая вспышка света без кольца.</summary>
+    public static void Shockwave(Vector3 pos, float radius, Color color)
+    {
+        var go = new GameObject("FX_MuzzleFlash");
+        go.transform.position = pos;
+        go.AddComponent<DestroyAfter>().lifetime = 0.3f;
+        AddLightFlash(go, color, intensity: 3.2f, radius: radius * 1.4f, duration: 0.1f);
+    }
 }
 
 public class FXRunner : MonoBehaviour
@@ -369,7 +455,7 @@ public class FXRunner : MonoBehaviour
         go.transform.position = worldPos + new Vector3(Random.Range(-0.2f, 0.2f), 0.4f, 0f);
         var tmp = go.AddComponent<TextMeshPro>();
         tmp.text = Mathf.RoundToInt(amount).ToString();
-        tmp.fontSize = 5f;
+        tmp.fontSize = 5f + Mathf.Clamp(amount * 0.09f, 0f, 5.5f); // крупные удары — крупнее цифры
         tmp.alignment = TextAlignmentOptions.Center;
         tmp.color = color;
         tmp.fontStyle = FontStyles.Bold;
@@ -446,5 +532,39 @@ public class DestroyAfter : MonoBehaviour
     {
         _t += Time.deltaTime;
         if (_t >= lifetime) Destroy(gameObject);
+    }
+}
+
+public class FXLine : MonoBehaviour
+{
+    LineRenderer _lr;
+    float _t;
+    float _duration;
+    float _width;
+    Color _color;
+
+    public void Setup(float duration, float width, Color color)
+    {
+        _lr = GetComponent<LineRenderer>();
+        _duration = Mathf.Max(0.001f, duration);
+        _width = width;
+        _color = color;
+    }
+
+    void Update()
+    {
+        _t += Time.deltaTime;
+        float p = Mathf.Clamp01(_t / _duration);
+        if (_lr != null)
+        {
+            float w = Mathf.Lerp(_width, 0f, p);
+            _lr.startWidth = w;
+            _lr.endWidth = w;
+            Color c = _color;
+            c.a = 1f - p;
+            _lr.startColor = c;
+            _lr.endColor = c;
+        }
+        if (p >= 1f) Destroy(gameObject);
     }
 }

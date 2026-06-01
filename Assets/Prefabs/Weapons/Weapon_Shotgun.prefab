@@ -111,8 +111,25 @@ MonoBehaviour:
   _bulletCount: 5
   _firingRate: 1.5
   _firingSpread: 35
-  _bombPrefab: {fileID: 0}
-  _bombCooldown: 2
+  _pierceCount: 0
+  _ricochetCount: 0
+  _ricochetRadius: 5
+  _knockbackForce: 11
+  _pointBlankDamageMult: 2.2
+  _pointBlankRange: 5
+  _bulletSpeedMult: 1
+  _bulletColor: {r: 1, g: 0.7, b: 0.16, a: 1}
+  _hitscan: 0
+  _hitscanRange: 30
+  _hitscanWidth: 0.45
+  _fireShake: 0.16
+  _muzzleShockwave: 0
+  _fireHitStop: 0.02
+  _recoilKick: 0.35
+  _recoilReturn: 8
+  _cameraKick: 0.18
+  _muzzleFlashScale: 1.7
+  _fireSound: 1
   _camera: {fileID: 0}
   _spriteAngleOffset: 0
   _playerSpriteToRotate: {fileID: 0}

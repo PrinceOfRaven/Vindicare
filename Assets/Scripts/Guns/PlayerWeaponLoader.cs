@@ -4,11 +4,9 @@ using UnityEngine;
 public class PlayerWeaponLoader : MonoBehaviour
 {
     [Header("Куда прицепить оружие")]
-    [Tooltip("Точка-хэндл, к которой будет привязан префаб оружия. Если пусто — привяжет к этому же transform.")]
     [SerializeField] private Transform _weaponMount;
 
     [Header("Фолбэк")]
-    [Tooltip("Оружие по умолчанию, если игрок попал в сцену в обход меню (например, при тесте напрямую из SampleScene).")]
     [SerializeField] private WeaponData _fallbackWeapon;
 
     private GameObject _spawnedWeapon;

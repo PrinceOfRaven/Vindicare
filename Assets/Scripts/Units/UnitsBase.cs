@@ -44,6 +44,10 @@ public abstract class UnitsBase : MonoBehaviour
         {
             AudioFX.EnemyHit();
             CyberpunkFX.HitStopThrottled(0.018f);
+
+            var squash = GetComponent<HitSquash>();
+            if (squash == null) squash = gameObject.AddComponent<HitSquash>();
+            squash.Punch();
         }
         else
         {

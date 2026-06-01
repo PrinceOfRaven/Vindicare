@@ -111,6 +111,25 @@ MonoBehaviour:
   _bulletCount: 1
   _firingRate: 1
   _firingSpread: 4
+  _pierceCount: 100
+  _ricochetCount: 0
+  _ricochetRadius: 5
+  _knockbackForce: 6
+  _pointBlankDamageMult: 1
+  _pointBlankRange: 4
+  _bulletSpeedMult: 2.2
+  _bulletColor: {r: 1, g: 0.18, b: 0.8, a: 1}
+  _hitscan: 1
+  _hitscanRange: 32
+  _hitscanWidth: 0.5
+  _fireShake: 0.32
+  _muzzleShockwave: 0
+  _fireHitStop: 0.06
+  _recoilKick: 0.4
+  _recoilReturn: 7
+  _cameraKick: 0.28
+  _muzzleFlashScale: 1.5
+  _fireSound: 2
   _camera: {fileID: 0}
   _spriteAngleOffset: 0
   _playerSpriteToRotate: {fileID: 0}
