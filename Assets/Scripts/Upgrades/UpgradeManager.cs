@@ -14,18 +14,58 @@ public class UpgradeManager : MonoBehaviour
     [Header("UI окно (заполнится автоматически если найдёт UpgradeUI в сцене)")]
     [SerializeField] private UpgradeUI _upgradeUI;
 
+    private readonly List<UpgradeData> _runtimeUpgrades = new();
+
     private void Awake()
     {
         if (Instance != null && Instance != this) { Destroy(this); return; }
         Instance = this;
 
+        EnsureRuntimeUpgrades();
+
         if (_upgradeUI == null) _upgradeUI = FindObjectOfType<UpgradeUI>(true);
         if (_upgradeUI != null) _upgradeUI.Hide();
+    }
+
+    // Добавляет продвинутые апгрейды в пул в рантайме (чтобы не плодить .asset-файлы и связывание в сцене).
+    private void EnsureRuntimeUpgrades()
+    {
+        AddRuntime(UpgradeData.UpgradeType.Crit,              "Крит. удар",   "+7% шанс крита (×2 урона)",        5);
+        AddRuntime(UpgradeData.UpgradeType.Lifesteal,         "Вампиризм",    "+1 HP за каждое убийство",         5);
+        AddRuntime(UpgradeData.UpgradeType.XpGain,            "Жажда опыта",  "+15% получаемого опыта",          5);
+        AddRuntime(UpgradeData.UpgradeType.CooldownReduction, "Ускорение",    "-12% к перезарядке способностей", 5);
+        AddRuntime(UpgradeData.UpgradeType.Dodge,             "Уклонение",    "+5% шанс уклониться от урона",     5);
+        AddRuntime(UpgradeData.UpgradeType.Armor,             "Броня",        "-2 к получаемому урону",           5);
+        AddRuntime(UpgradeData.UpgradeType.Regen,             "Регенерация",  "+0.5 HP в секунду",               5);
+    }
+
+    private void AddRuntime(UpgradeData.UpgradeType type, string name, string desc, int maxStacks)
+    {
+        foreach (var u in _allUpgrades)
+            if (u != null && u.type == type) return; // уже есть как ассет — не дублируем
+
+        var data = ScriptableObject.CreateInstance<UpgradeData>();
+        data.type = type;
+        data.upgradeName = name;
+        data.description = desc;
+        data.maxStacks = maxStacks;
+        data.icon = null;
+        _allUpgrades.Add(data);
+        _runtimeUpgrades.Add(data);
     }
 
     private void OnDestroy()
     {
         if (Instance == this) Instance = null;
+
+        // Чистим рантайм-созданные апгрейды, чтобы не текли при перезапуске сцены.
+        foreach (var u in _runtimeUpgrades)
+        {
+            if (u == null) continue;
+            _allUpgrades.Remove(u);
+            Destroy(u);
+        }
+        _runtimeUpgrades.Clear();
     }
 
     public void OfferUpgrades()

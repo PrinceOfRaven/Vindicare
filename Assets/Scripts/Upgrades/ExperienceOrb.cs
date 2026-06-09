@@ -13,6 +13,14 @@ public class ExperienceOrb : MonoBehaviour
     private Transform _player;
     private float _currentSpeed;
     private bool _collected;
+    private bool _magnet;
+
+    /// <summary>Притянуть все сферы опыта к игроку (предмет «Магнит»).</summary>
+    public static void MagnetizeAll()
+    {
+        foreach (var orb in FindObjectsOfType<ExperienceOrb>())
+            orb._magnet = true;
+    }
 
     private void Start()
     {
@@ -36,7 +44,7 @@ public class ExperienceOrb : MonoBehaviour
             ? PlayerStats.Instance.PickupRadius
             : 1.5f;
 
-        if (dist > pickupRadius) return;
+        if (!_magnet && dist > pickupRadius) return;
 
         if (dist <= _collectDistance)
         {
@@ -54,8 +62,11 @@ public class ExperienceOrb : MonoBehaviour
         _collected = true;
         CyberpunkFX.SpawnPickupPop(transform.position, CyberpunkFX.Lime);
         AudioFX.Pickup();
+        int amount = _xpAmount;
+        if (PlayerStats.Instance != null)
+            amount = Mathf.Max(1, Mathf.RoundToInt(amount * PlayerStats.Instance.XpMultiplier));
         if (PlayerLevel.Instance != null)
-            PlayerLevel.Instance.AddExperience(_xpAmount);
+            PlayerLevel.Instance.AddExperience(amount);
         Destroy(gameObject);
     }
 }

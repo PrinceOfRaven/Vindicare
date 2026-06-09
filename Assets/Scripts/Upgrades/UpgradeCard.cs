@@ -104,6 +104,13 @@ public class UpgradeCard : MonoBehaviour
             case UpgradeData.UpgradeType.PickupRadius:    return new Color(0.45f, 1f, 0.3f);
             case UpgradeData.UpgradeType.ProjectileCount: return new Color(1f, 0.18f, 0.80f);
             case UpgradeData.UpgradeType.BombDamage:      return new Color(1f, 0.55f, 0.10f);
+            case UpgradeData.UpgradeType.Crit:            return new Color(1f, 0.80f, 0.15f);
+            case UpgradeData.UpgradeType.Lifesteal:       return new Color(1f, 0.25f, 0.45f);
+            case UpgradeData.UpgradeType.XpGain:          return new Color(0.55f, 1f, 0.35f);
+            case UpgradeData.UpgradeType.CooldownReduction:return new Color(0.4f, 0.8f, 1f);
+            case UpgradeData.UpgradeType.Dodge:           return new Color(0f, 1f, 0.88f);
+            case UpgradeData.UpgradeType.Armor:           return new Color(0.7f, 0.75f, 0.85f);
+            case UpgradeData.UpgradeType.Regen:           return new Color(0.3f, 1f, 0.55f);
             default:                                       return Color.white;
         }
     }

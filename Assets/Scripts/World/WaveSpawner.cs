@@ -60,6 +60,14 @@ public class WaveSpawner : MonoBehaviour
     [Header("Дебаг")]
     [SerializeField] private bool _verboseLogs = true;
 
+    // События (рандомные интервалы — чтобы каждый забег ощущался по-разному)
+    private const float FirstEventMinDelay = 40f;
+    private const float FirstEventMaxDelay = 75f;
+    private const float EventIntervalMin = 60f;
+    private const float EventIntervalMax = 115f;
+
+    private readonly List<GameObject> _eventPrefabs = new List<GameObject>();
+
     public static WaveSpawner Instance { get; private set; }
 
     public event Action<int, Wave> OnWaveStarted;
@@ -85,6 +93,7 @@ public class WaveSpawner : MonoBehaviour
         if (Instance != null && Instance != this) { Destroy(this); return; }
         Instance = this;
         RunDifficulty.Reset();
+        EnemyBase.FreezeUntilTime = 0f;
     }
 
     private void OnDestroy()
@@ -95,7 +104,9 @@ public class WaveSpawner : MonoBehaviour
     private void Start()
     {
         if (_camera == null) _camera = Camera.main;
+        BuildEventPrefabPool();
         StartCoroutine(RunSpawner());
+        StartCoroutine(RunEvents());
     }
 
     private IEnumerator RunSpawner()
@@ -179,7 +190,9 @@ public class WaveSpawner : MonoBehaviour
         onDone?.Invoke();
     }
 
-    private void SpawnOne(GameObject prefab)
+    private void SpawnOne(GameObject prefab) => SpawnOne(prefab, true);
+
+    private void SpawnOne(GameObject prefab, bool trackInWave)
     {
         if (Player == null) return;
 
@@ -189,10 +202,86 @@ public class WaveSpawner : MonoBehaviour
         }
 
         GameObject instance = Instantiate(prefab, pos, Quaternion.identity);
-        if (instance.TryGetComponent(out UnitsBase unit))
+
+        MaybeAddSpecialBehavior(instance);
+
+        if (trackInWave && instance.TryGetComponent(out UnitsBase unit))
         {
             _aliveFromCurrentWave.Add(unit);
             unit.OnDeath += OnEnemyDied;
+        }
+    }
+
+    // Часть обычных врагов превращаем в стрелков/камикадзе/таранов. Доля растёт по кругам.
+    private void MaybeAddSpecialBehavior(GameObject enemy)
+    {
+        if (enemy.GetComponent<Boss>() != null) return;
+        if (enemy.GetComponent<IEnemyAbility>() != null) return;
+
+        float loop = RunDifficulty.LoopCount;
+        float rangedChance  = 0.18f + 0.025f * loop;
+        float bomberChance  = 0.10f + 0.020f * loop;
+        float chargerChance = 0.10f + 0.020f * loop;
+
+        float roll = UnityEngine.Random.value;
+        if (roll < rangedChance)
+            enemy.AddComponent<RangedAbility>();
+        else if (roll < rangedChance + bomberChance)
+            enemy.AddComponent<BomberAbility>();
+        else if (roll < rangedChance + bomberChance + chargerChance)
+            enemy.AddComponent<ChargerAbility>();
+    }
+
+    // ── События ───────────────────────────────────────────────────────────
+
+    private void BuildEventPrefabPool()
+    {
+        _eventPrefabs.Clear();
+        foreach (var wave in _waves)
+        {
+            if (wave?.groups == null) continue;
+            foreach (var g in wave.groups)
+            {
+                if (g?.enemyPrefab == null) continue;
+                if (g.enemyPrefab.GetComponent<Boss>() != null) continue; // боссов в стаю не берём
+                if (!_eventPrefabs.Contains(g.enemyPrefab)) _eventPrefabs.Add(g.enemyPrefab);
+            }
+        }
+    }
+
+    private IEnumerator RunEvents()
+    {
+        while (CaveGenerator.Instance == null || !CaveGenerator.Instance.IsGenerated) yield return null;
+        while (Player == null) yield return null;
+        if (_eventPrefabs.Count == 0) yield break;
+
+        yield return new WaitForSeconds(UnityEngine.Random.Range(FirstEventMinDelay, FirstEventMaxDelay));
+
+        while (true)
+        {
+            if (Player != null) yield return SwarmEvent();
+            yield return new WaitForSeconds(UnityEngine.Random.Range(EventIntervalMin, EventIntervalMax));
+        }
+    }
+
+    private IEnumerator SwarmEvent()
+    {
+        if (HUD.Instance != null)
+            HUD.Instance.FlashMessage("СТАЯ ВРАГОВ!", new Color(1f, 0.45f, 0.1f));
+        CyberpunkFX.Shake(0.25f, 0.3f);
+
+        int count = UnityEngine.Random.Range(10, 18) + _loopCount * 4;
+
+        // Половина стай — «однородные» (один тип врага), половина — смешанные. Для разнообразия.
+        bool themed = UnityEngine.Random.value < 0.5f;
+        GameObject themePrefab = _eventPrefabs[UnityEngine.Random.Range(0, _eventPrefabs.Count)];
+
+        for (int i = 0; i < count; i++)
+        {
+            if (Player == null) yield break;
+            var prefab = themed ? themePrefab : _eventPrefabs[UnityEngine.Random.Range(0, _eventPrefabs.Count)];
+            SpawnOne(prefab, false); // не трекаем в волне, чтобы не блокировать waitForClear
+            yield return new WaitForSeconds(0.06f);
         }
     }
 

@@ -67,6 +67,11 @@ public class HUD : MonoBehaviour
 
     private readonly List<AbilitySlotUI> _abilitySlots = new List<AbilitySlotUI>();
     private const float AbilityNameRow = 22f;
+    private RectTransform _abilityBar;
+    private struct ToastData { public string Text; public Color Color; public bool Sound; }
+    private readonly Queue<ToastData> _abilityToasts = new Queue<ToastData>();
+    private bool _abilityToastActive;
+    private static readonly Color ToastGold = new Color(1f, 0.82f, 0.2f);
 
     // Босс-бар
     private RectTransform _bossBarRoot;
@@ -254,12 +259,8 @@ public class HUD : MonoBehaviour
         _controlsHint.alignment = TextAlignmentOptions.Center;
         _controlsHint.fontSize = 24f;
         _controlsHint.text =
-            "<b>Движение</b> — WASD     <b>Прицел</b> — мышь\n" +
-            "<color=#FF2FD9>E</color> Бомба    " +
-            "<color=#00FFE0>Shift</color> Рывок    " +
-            "<color=#33B3FF>Q</color> Щит    " +
-            "<color=#FFB327>R</color> Овердрайв    " +
-            "<color=#73FF4D>F</color> Турель";
+            "<b>Движение</b> — WASD     <b>Прицел</b> — мышь     <color=#FF2FD9>E</color> — Бомба\n" +
+            "<size=75%><alpha=#CC>Новые способности открываются с уровнями</size>";
         CyberpunkUI.StyleTMP(_controlsHint, Color.white, Color.black, 0.25f);
         StartCoroutine(FadeControlsHint());
     }
@@ -392,6 +393,7 @@ public class HUD : MonoBehaviour
 
         var container = new GameObject("AbilityBar", typeof(RectTransform));
         var crt = (RectTransform)container.transform;
+        _abilityBar = crt;
         crt.SetParent(root, false);
         crt.anchorMin = new Vector2(0.5f, 0f);
         crt.anchorMax = new Vector2(0.5f, 0f);
@@ -417,6 +419,83 @@ public class HUD : MonoBehaviour
             float x = i * (slotSize + gap);
             _abilitySlots.Add(BuildSlot(crt, abilities[i], x, slotSize));
         }
+    }
+
+    /// <summary>Пересобрать панель способностей (после открытия новой).</summary>
+    public void RebuildAbilityBar()
+    {
+        if (_abilityBar != null) Destroy(_abilityBar.gameObject);
+        _abilityBar = null;
+        _abilitySlots.Clear();
+        BuildAbilityBar();
+    }
+
+    /// <summary>Вызывается AbilityUnlocker при открытии способности.</summary>
+    public void OnAbilityUnlocked(string abilityName, string key)
+    {
+        RebuildAbilityBar();
+        _abilityToasts.Enqueue(new ToastData {
+            Text = $"НОВАЯ СПОСОБНОСТЬ\n<size=135%>{abilityName}</size>   <color=#00E0FF>[{key}]</color>",
+            Color = ToastGold, Sound = true });
+    }
+
+    /// <summary>Короткое сообщение по центру (предметы, события).</summary>
+    public void FlashMessage(string text, Color color)
+    {
+        _abilityToasts.Enqueue(new ToastData { Text = text, Color = color, Sound = false });
+    }
+
+    private void ProcessAbilityToasts()
+    {
+        // Показываем тост только когда нет модального экрана (апгрейд паузит игру).
+        if (_abilityToastActive || _abilityToasts.Count == 0 || Time.timeScale == 0f) return;
+        if (!isActiveAndEnabled) return;
+        StartCoroutine(ShowAbilityToast(_abilityToasts.Dequeue()));
+    }
+
+    private System.Collections.IEnumerator ShowAbilityToast(ToastData data)
+    {
+        _abilityToastActive = true;
+
+        var canvas = GetComponentInParent<Canvas>();
+        Transform root = canvas != null ? canvas.transform : transform;
+
+        var toast = CreateText("EventToast", root,
+            anchor: new Vector2(0.5f, 0.82f), pivot: new Vector2(0.5f, 0.5f),
+            pos: Vector2.zero, size: new Vector2(760f, 90f));
+        toast.alignment = TextAlignmentOptions.Center;
+        toast.fontSize = 34f;
+        toast.text = data.Text;
+        CyberpunkUI.StyleTMP(toast, data.Color, Color.black, 0.3f);
+
+        if (data.Sound) AudioFX.LevelUp();
+
+        var rt = toast.rectTransform;
+        float t = 0f;
+        while (t < 0.3f)
+        {
+            t += Time.unscaledDeltaTime;
+            float k = Mathf.Clamp01(t / 0.3f);
+            toast.alpha = k;
+            float s = Mathf.Lerp(1.5f, 1f, k);
+            rt.localScale = new Vector3(s, s, 1f);
+            yield return null;
+        }
+        toast.alpha = 1f;
+        rt.localScale = Vector3.one;
+
+        yield return new WaitForSecondsRealtime(2.4f);
+
+        t = 0f;
+        while (t < 0.7f)
+        {
+            t += Time.unscaledDeltaTime;
+            toast.alpha = 1f - Mathf.Clamp01(t / 0.7f);
+            yield return null;
+        }
+
+        Destroy(toast.gameObject);
+        _abilityToastActive = false;
     }
 
     private List<IAbilityDisplay> CollectAbilities()
@@ -529,7 +608,7 @@ public class HUD : MonoBehaviour
 
             if (s.CooldownText != null)
                 s.CooldownText.text = (!ready && rem > 0f)
-                    ? Mathf.CeilToInt(rem * AbilityCooldownSeconds(s.Ability)).ToString()
+                    ? Mathf.CeilToInt(rem * s.Ability.CooldownSeconds).ToString()
                     : string.Empty;
 
             // Во время перезарядки показываем только цифру отсчёта, клавишу прячем.
@@ -549,12 +628,6 @@ public class HUD : MonoBehaviour
                 }
             }
         }
-    }
-
-    private static float AbilityCooldownSeconds(IAbilityDisplay a)
-    {
-        // Оценка полного кулдауна по текущей доле — нужна только для подписи секунд.
-        return a is PlayerAbility pa ? Mathf.Max(0.1f, pa.CooldownSeconds) : 2f;
     }
 
     private void BuildWaveUI()
@@ -844,6 +917,7 @@ public class HUD : MonoBehaviour
         UpdateAbilityBar();
         UpdateBossHealthBar();
         UpdateCombo();
+        ProcessAbilityToasts();
     }
 
     private void UpdateBossHealthBar()

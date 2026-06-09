@@ -12,6 +12,13 @@ public class UpgradeData : ScriptableObject
         PickupRadius,
         ProjectileCount,
         BombDamage,
+        Crit,
+        Lifesteal,
+        XpGain,
+        CooldownReduction,
+        Dodge,
+        Armor,
+        Regen,
     }
 
     [Header("Описание для UI")]

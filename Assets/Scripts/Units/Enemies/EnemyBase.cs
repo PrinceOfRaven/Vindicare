@@ -15,6 +15,19 @@ public abstract class EnemyBase : UnitsBase
 
     protected Transform _target;
     protected float _nextAttackTime;
+    private IEnemyAbility _ability;
+
+    /// <summary>Время, до которого все враги заморожены (предмет «Заморозка»).</summary>
+    public static float FreezeUntilTime;
+    public static bool Frozen => Time.time < FreezeUntilTime;
+
+    public Transform Target => _target;
+
+    /// <summary>Когда true — движением врага управляет способность (рывок чарджера), а не базовая логика.</summary>
+    public bool ExternalControl { get; set; }
+
+    /// <summary>Доступ к Rigidbody для болт-он способностей.</summary>
+    public Rigidbody2D Body => rb;
 
     protected override void Awake()
     {
@@ -47,6 +60,7 @@ public abstract class EnemyBase : UnitsBase
         AcquireTarget();
         if (GetComponent<EnemyHealthBar>() == null)
             gameObject.AddComponent<EnemyHealthBar>();
+        _ability = GetComponent<IEnemyAbility>();
     }
 
     private void AcquireTarget()
@@ -57,6 +71,9 @@ public abstract class EnemyBase : UnitsBase
 
     protected virtual void FixedUpdate()
     {
+        if (Frozen) { rb.linearVelocity = Vector2.zero; return; }
+        if (ExternalControl) return; // движение перехватила способность (рывок)
+
         if (_target == null)
         {
             AcquireTarget();
@@ -66,10 +83,13 @@ public abstract class EnemyBase : UnitsBase
         Vector2 toTarget = (Vector2)_target.position - rb.position;
         float dist = toTarget.magnitude;
 
-        if (dist <= _contactRadius)
+        float stopRange = (_ability != null && _ability.StopRange > 0f) ? _ability.StopRange : _contactRadius;
+
+        if (dist <= stopRange)
         {
             rb.linearVelocity = Vector2.zero;
-            TryHitTarget();
+            if (_ability != null) _ability.Act(this, _target, dist);
+            else TryHitTarget();
             return;
         }
 
@@ -123,7 +143,18 @@ public abstract class EnemyBase : UnitsBase
             HealthOrb.Spawn(transform.position + (Vector3)offset, _healthOrbHeal);
         }
 
+        if (PowerupPickup.RollDrop())
+            PowerupPickup.SpawnRandom(transform.position);
+
         if (HUD.Instance != null) HUD.Instance.RegisterKill();
+
+        // Вампиризм: лечим игрока за убийство.
+        if (PlayerStats.Instance != null && PlayerMovement.Instance != null)
+        {
+            int lifesteal = PlayerStats.Instance.LifestealPerKill;
+            if (lifesteal > 0) PlayerMovement.Instance.HealSilent(lifesteal);
+        }
+
         base.onObjectDeath();
     }
 

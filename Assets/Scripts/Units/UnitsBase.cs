@@ -68,6 +68,14 @@ public abstract class UnitsBase : MonoBehaviour
         OnDeath?.Invoke(this);
     }
 
+    /// <summary>Мгновенно убивает юнит без всплывающего числа урона (нюк, само-подрыв камикадзе).</summary>
+    public void Kill()
+    {
+        if (!IsAlive) return;
+        _health = 0;
+        onObjectDeath();
+    }
+
     protected virtual void onObjectDeath()
     {
         RaiseDeath();

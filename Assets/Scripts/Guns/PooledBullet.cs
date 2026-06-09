@@ -141,7 +141,21 @@ public class PooledBullet : MonoBehaviour
             if (unit != null)
             {
                 _hitUnits.Add(unit);
-                unit.TakeDamage(ComputeDamage());
+
+                float dmg = ComputeDamage();
+                bool crit = PlayerStats.Instance != null
+                            && Random.value < PlayerStats.Instance.CritChance;
+                if (crit) dmg *= PlayerStats.Instance.CritMultiplier;
+
+                unit.TakeDamage(dmg);
+
+                if (crit)
+                {
+                    // Маркер крита — янтарные искры (число и так показывается крупнее базовым попапом).
+                    CyberpunkFX.SpawnHitSpark(unit.transform.position, CyberpunkFX.Amber);
+                    CyberpunkFX.SpawnHitSpark(unit.transform.position + Vector3.up * 0.25f, CyberpunkFX.Amber);
+                }
+
                 if (unit is EnemyBase enemy)
                     enemy.ApplyKnockback(_direction, KnockbackForce());
             }

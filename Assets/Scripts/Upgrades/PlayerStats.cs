@@ -31,6 +31,24 @@ public class PlayerStats : MonoBehaviour
     [Header("Базовый радиус подбора (мировые единицы)")]
     [SerializeField] private float _basePickupRadius = 1.5f;
 
+    [Header("Продвинутые апгрейды")]
+    [Tooltip("+7% шанс крита за стак")]
+    [SerializeField] private float _critChancePerStack = 0.07f;
+    [Tooltip("Множитель урона при крите")]
+    [SerializeField] private float _critMultiplier = 2f;
+    [Tooltip("+1 HP за убийство за стак (вампиризм)")]
+    [SerializeField] private int _lifestealPerStack = 1;
+    [Tooltip("+15% к получаемому опыту за стак")]
+    [SerializeField] private float _xpGainPerStack = 0.15f;
+    [Tooltip("-12% к перезарядке способностей за стак")]
+    [SerializeField] private float _cooldownReductionPerStack = 0.12f;
+    [Tooltip("+5% шанс уклонения за стак")]
+    [SerializeField] private float _dodgePerStack = 0.05f;
+    [Tooltip("-2 к получаемому урону за стак (броня)")]
+    [SerializeField] private int _armorPerStack = 2;
+    [Tooltip("+0.5 HP/сек за стак (регенерация)")]
+    [SerializeField] private float _regenPerStack = 0.5f;
+
     private readonly Dictionary<UpgradeData.UpgradeType, int> _stacks = new();
 
     public event Action OnStatsChanged;
@@ -110,4 +128,13 @@ public class PlayerStats : MonoBehaviour
     public float PickupRadius => _basePickupRadius * (1f + _pickupRadiusPerStack * GetStacks(UpgradeData.UpgradeType.PickupRadius));
     public int ExtraProjectiles => _projectilesPerStack * GetStacks(UpgradeData.UpgradeType.ProjectileCount);
     public float BombDamageMultiplier => 1f + _bombDamagePerStack * GetStacks(UpgradeData.UpgradeType.BombDamage);
+
+    public float CritChance => Mathf.Min(0.85f, _critChancePerStack * GetStacks(UpgradeData.UpgradeType.Crit));
+    public float CritMultiplier => _critMultiplier;
+    public int LifestealPerKill => _lifestealPerStack * GetStacks(UpgradeData.UpgradeType.Lifesteal);
+    public float XpMultiplier => 1f + _xpGainPerStack * GetStacks(UpgradeData.UpgradeType.XpGain);
+    public float AbilityCooldownMultiplier => Mathf.Max(0.4f, 1f - _cooldownReductionPerStack * GetStacks(UpgradeData.UpgradeType.CooldownReduction));
+    public float DodgeChance => Mathf.Min(0.75f, _dodgePerStack * GetStacks(UpgradeData.UpgradeType.Dodge));
+    public int Armor => _armorPerStack * GetStacks(UpgradeData.UpgradeType.Armor);
+    public float RegenPerSecond => _regenPerStack * GetStacks(UpgradeData.UpgradeType.Regen);
 }

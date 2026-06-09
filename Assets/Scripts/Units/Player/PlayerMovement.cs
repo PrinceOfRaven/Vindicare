@@ -102,6 +102,7 @@ public class PlayerMovement : UnitsBase
         }
 
         UpdateFacing();
+        ApplyRegen();
     }
 
     private void UpdateFacing()
@@ -154,6 +155,29 @@ public class PlayerMovement : UnitsBase
         CyberpunkFX.DamagePopup(transform.position, amount, CyberpunkFX.Lime);
     }
 
+    /// <summary>Лечение без всплывающего числа (для вампиризма/регена, чтобы не спамить попапами).</summary>
+    public void HealSilent(int amount)
+    {
+        if (amount <= 0 || !IsAlive) return;
+        _health = Mathf.Min(_health + amount, _maxHealth);
+    }
+
+    private float _regenAccum;
+    private void ApplyRegen()
+    {
+        if (PlayerStats.Instance == null || !IsAlive) return;
+        float r = PlayerStats.Instance.RegenPerSecond;
+        if (r <= 0f || _health >= _maxHealth) { _regenAccum = 0f; return; }
+
+        _regenAccum += r * Time.deltaTime;
+        if (_regenAccum >= 1f)
+        {
+            int whole = (int)_regenAccum;
+            _regenAccum -= whole;
+            HealSilent(whole);
+        }
+    }
+
     protected override void onObjectDeath()
     {
         RaiseDeath();
@@ -174,6 +198,20 @@ public class PlayerMovement : UnitsBase
             return false;
         }
 
+        if (PlayerStats.Instance != null)
+        {
+            // Уклонение — полностью игнорирует удар.
+            if (Random.value < PlayerStats.Instance.DodgeChance)
+            {
+                CyberpunkFX.SpawnHitSpark(transform.position, CyberpunkFX.Cyan);
+                CyberpunkFX.Kick(_moveInput.sqrMagnitude > 0.01f ? _moveInput : FacingDirection, 0.12f);
+                return false;
+            }
+            // Броня — снижает урон (но не ниже 1).
+            int armor = PlayerStats.Instance.Armor;
+            if (armor > 0) amount = Mathf.Max(1f, amount - armor);
+        }
+
         bool died = base.TakeDamage(amount);
         if (!died)
         {
@@ -190,14 +228,8 @@ public class PlayerMovement : UnitsBase
         if (GetComponent<PlayerWalkAnimation>() == null)
             gameObject.AddComponent<PlayerWalkAnimation>();
 
-        EnsureAbility<DashAbility>();
-        EnsureAbility<ShieldAbility>();
-        EnsureAbility<OverdriveAbility>();
-        EnsureAbility<TurretAbility>();
-    }
-
-    private void EnsureAbility<T>() where T : PlayerAbility
-    {
-        if (GetComponent<T>() == null) gameObject.AddComponent<T>();
+        // Способности открываются по уровням (бомба доступна сразу).
+        if (GetComponent<AbilityUnlocker>() == null)
+            gameObject.AddComponent<AbilityUnlocker>();
     }
 }

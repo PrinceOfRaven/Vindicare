@@ -20,17 +20,24 @@ public class PlayerBombThrow : MonoBehaviour, IAbilityDisplay
 
     private PlayerActionsControl _actions;
     private float _nextThrowTime;
+    private float _lastCooldown;
 
     /// <summary>Готова ли способность к применению.</summary>
     public bool IsReady => Time.time >= _nextThrowTime;
+
+    private float EffectiveCooldown => _lastCooldown > 0f ? _lastCooldown : _cooldown;
+
+    /// <summary>Фактическая длительность перезарядки (для подписи отсчёта).</summary>
+    public float CooldownSeconds => EffectiveCooldown;
 
     /// <summary>Доля оставшейся перезарядки: 1 — только что использована, 0 — готова.</summary>
     public float CooldownRemaining01
     {
         get
         {
-            if (_cooldown <= 0f) return 0f;
-            return Mathf.Clamp01((_nextThrowTime - Time.time) / _cooldown);
+            float cd = EffectiveCooldown;
+            if (cd <= 0f) return 0f;
+            return Mathf.Clamp01((_nextThrowTime - Time.time) / cd);
         }
     }
 
@@ -80,6 +87,8 @@ public class PlayerBombThrow : MonoBehaviour, IAbilityDisplay
             bombScript.Launch(direction);
         }
 
-        _nextThrowTime = Time.time + _cooldown;
+        float haste = PlayerStats.Instance != null ? PlayerStats.Instance.AbilityCooldownMultiplier : 1f;
+        _lastCooldown = _cooldown * haste;
+        _nextThrowTime = Time.time + _lastCooldown;
     }
 }

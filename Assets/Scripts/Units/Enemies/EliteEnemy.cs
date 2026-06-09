@@ -24,4 +24,11 @@ public class EliteEnemy : Enemy
         var sr = GetComponent<SpriteRenderer>();
         if (sr != null) sr.color = _eliteTint;
     }
+
+    protected override void onObjectDeath()
+    {
+        // Элита гарантированно роняет предмет — награда за тяжёлого врага.
+        PowerupPickup.SpawnRandom(transform.position);
+        base.onObjectDeath();
+    }
 }

@@ -19,23 +19,26 @@ public abstract class PlayerAbility : MonoBehaviour, IAbilityDisplay
     protected virtual float DefaultCooldown => 6f;
 
     private float _nextReadyTime;
+    private float _lastCooldown;
 
     protected virtual void Awake()
     {
         _cooldown = DefaultCooldown;
+        _lastCooldown = _cooldown;
     }
 
     public bool IsReady => Time.time >= _nextReadyTime;
 
-    /// <summary>Полный кулдаун в секундах (для отображения таймера).</summary>
-    public float CooldownSeconds => _cooldown;
+    /// <summary>Фактический кулдаун последнего применения (с учётом «Ускорения»).</summary>
+    public float CooldownSeconds => _lastCooldown > 0f ? _lastCooldown : _cooldown;
 
     public float CooldownRemaining01
     {
         get
         {
-            if (_cooldown <= 0f) return 0f;
-            return Mathf.Clamp01((_nextReadyTime - Time.time) / _cooldown);
+            float cd = CooldownSeconds;
+            if (cd <= 0f) return 0f;
+            return Mathf.Clamp01((_nextReadyTime - Time.time) / cd);
         }
     }
 
@@ -49,7 +52,9 @@ public abstract class PlayerAbility : MonoBehaviour, IAbilityDisplay
         if (IsReady && kb[Hotkey].wasPressedThisFrame)
         {
             Activate();
-            _nextReadyTime = Time.time + _cooldown;
+            float haste = PlayerStats.Instance != null ? PlayerStats.Instance.AbilityCooldownMultiplier : 1f;
+            _lastCooldown = _cooldown * haste;
+            _nextReadyTime = Time.time + _lastCooldown;
         }
     }
 

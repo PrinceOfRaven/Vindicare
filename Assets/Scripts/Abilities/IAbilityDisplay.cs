@@ -13,5 +13,9 @@ public interface IAbilityDisplay
 
     /// <summary>1 — только что использована, 0 — готова.</summary>
     float CooldownRemaining01 { get; }
+
+    /// <summary>Фактическая длительность перезарядки в секундах (для подписи отсчёта).</summary>
+    float CooldownSeconds { get; }
+
     bool IsReady { get; }
 }
