@@ -58,6 +58,7 @@ public class Turret : MonoBehaviour
 
         CyberpunkFX.Beam(transform.position, nearest.transform.position, _color, 0.18f, 0.08f);
         CyberpunkFX.SpawnHitSpark(nearest.transform.position, _color);
+        AudioFX.TurretShot();
         return true;
     }
 

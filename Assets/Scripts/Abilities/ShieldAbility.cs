@@ -19,7 +19,7 @@ public class ShieldAbility : PlayerAbility
         if (player == null) return;
 
         player.SetInvulnerable(_shieldDuration);
-        AudioFX.LevelUp();
+        AudioFX.Shield();
         StartCoroutine(ShieldVisual(player.transform, _shieldDuration));
     }
 

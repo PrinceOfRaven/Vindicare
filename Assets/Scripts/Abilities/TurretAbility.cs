@@ -20,7 +20,7 @@ public class TurretAbility : PlayerAbility
         var turret = go.AddComponent<Turret>();
         turret.Init(ThemeColor);
 
-        AudioFX.UIClick();
+        AudioFX.TurretDeploy();
         CyberpunkFX.Shockwave(player.transform.position, 1.6f, ThemeColor);
     }
 }

@@ -21,7 +21,7 @@ public class OverdriveAbility : PlayerAbility
         if (PlayerStats.Instance == null) return;
 
         PlayerStats.Instance.ApplyTempBuff(_damageMul, _fireRateMul, _moveMul, _duration);
-        AudioFX.LevelUp();
+        AudioFX.Overdrive();
 
         var player = PlayerMovement.Instance;
         if (player != null) StartCoroutine(OverdriveVisual(player.transform, _duration));

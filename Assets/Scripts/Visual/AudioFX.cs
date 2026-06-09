@@ -14,7 +14,8 @@ public static class AudioFX
 
     static AudioClip _shoot, _shootRifle, _shootShotgun, _shootSniper,
                      _enemyHit, _enemyDeath, _playerHit, _playerDeath,
-                     _pickup, _levelUp, _explosion, _uiClick;
+                     _pickup, _levelUp, _explosion, _uiClick,
+                     _dash, _shield, _overdrive, _turret;
 
     static float _lastShootTime = -10f;
     static float _lastEnemyHitTime = -10f;
@@ -118,6 +119,12 @@ public static class AudioFX
     public static void Explosion() => Play(_explosion, 0.85f, 0.95f, 1.05f);
     public static void UIClick() => Play(_uiClick, 0.4f, 0.97f, 1.03f);
 
+    public static void Dash() => Play(_dash, 0.5f, 0.97f, 1.06f);
+    public static void Shield() => Play(_shield, 0.55f);
+    public static void Overdrive() => Play(_overdrive, 0.6f);
+    public static void TurretDeploy() => Play(_turret, 0.5f, 0.82f, 0.9f);
+    public static void TurretShot() => Play(_turret, 0.22f, 1.08f, 1.22f);
+
     static void Play(AudioClip clip, float volume, float pitchMin = 1f, float pitchMax = 1f)
     {
         if (!_ready || clip == null) return;
@@ -141,6 +148,98 @@ public static class AudioFX
         _levelUp     = BuildLevelUp();
         _explosion   = BuildExplosion();
         _uiClick     = BuildUIClick();
+        _dash        = BuildDash();
+        _shield      = BuildShield();
+        _overdrive   = BuildOverdrive();
+        _turret      = BuildTurret();
+    }
+
+    // Рывок: восходяще-нисходящий «вжух» — тональный свип вниз, замешанный с шумом, конверт-свелл.
+    static AudioClip BuildDash()
+    {
+        const float dur = 0.22f;
+        var d = Buffer(dur);
+        float phase = 0f;
+        for (int i = 0; i < d.Length; i++)
+        {
+            float t = (float)i / SampleRate;
+            float p = t / dur;
+            float freq = Mathf.Lerp(720f, 170f, p);
+            phase += freq / SampleRate;
+            float sine = Mathf.Sin((phase - Mathf.Floor(phase)) * TwoPi);
+            float noise = Random.Range(-1f, 1f);
+            float body = Mathf.Lerp(noise, sine, 0.4f);
+            float env = Mathf.Sin(Mathf.PI * Mathf.Clamp01(p));
+            d[i] = body * env * 0.6f;
+        }
+        return Finish("sfx_dash", d);
+    }
+
+    // Щит: восходящий мерцающий аккорд (основной тон + квинта), мягкая атака и долгий спад.
+    static AudioClip BuildShield()
+    {
+        const float dur = 0.5f;
+        var d = Buffer(dur);
+        float ph1 = 0f, ph2 = 0f;
+        for (int i = 0; i < d.Length; i++)
+        {
+            float t = (float)i / SampleRate;
+            float p = t / dur;
+            float f1 = Mathf.Lerp(240f, 520f, p);
+            ph1 += f1 / SampleRate;
+            ph2 += (f1 * 1.5f) / SampleRate;
+            float wave = Mathf.Sin((ph1 - Mathf.Floor(ph1)) * TwoPi)
+                       + 0.5f * Mathf.Sin((ph2 - Mathf.Floor(ph2)) * TwoPi);
+            float attack = 1f - Mathf.Exp(-t * 18f);
+            float decay = Mathf.Exp(-t * 2.6f);
+            d[i] = wave * attack * decay * 0.4f;
+        }
+        return Finish("sfx_shield", d);
+    }
+
+    // Овердрайв: нарастающий пилообразный «разгон» с суб-октавой и лёгким вибрато.
+    static AudioClip BuildOverdrive()
+    {
+        const float dur = 0.55f;
+        var d = Buffer(dur);
+        float ph = 0f, phSub = 0f;
+        for (int i = 0; i < d.Length; i++)
+        {
+            float t = (float)i / SampleRate;
+            float p = t / dur;
+            float vib = 1f + 0.02f * Mathf.Sin(t * 38f);
+            float freq = Mathf.Lerp(120f, 300f, p) * vib;
+            ph += freq / SampleRate;
+            phSub += (freq * 0.5f) / SampleRate;
+            float saw = 2f * (ph - Mathf.Floor(ph)) - 1f;
+            float sub = 2f * (phSub - Mathf.Floor(phSub)) - 1f;
+            float mix = saw * 0.6f + sub * 0.4f;
+            mix = Mathf.Clamp(mix * 1.4f, -1f, 1f); // лёгкий перегруз
+            float env = (1f - Mathf.Exp(-t * 10f)) * Mathf.Lerp(1f, 0.7f, p);
+            d[i] = mix * env * 0.45f;
+        }
+        return Finish("sfx_overdrive", d);
+    }
+
+    // Турель/лазер: металлический «зэп» — высокий свип вниз + шумовой щелчок, быстрый спад.
+    static AudioClip BuildTurret()
+    {
+        const float dur = 0.12f;
+        var d = Buffer(dur);
+        float phase = 0f;
+        for (int i = 0; i < d.Length; i++)
+        {
+            float t = (float)i / SampleRate;
+            float p = t / dur;
+            float freq = Mathf.Lerp(1900f, 560f, p * p);
+            phase += freq / SampleRate;
+            float cyc = phase - Mathf.Floor(phase);
+            float sq = cyc < 0.5f ? 0.5f : -0.5f;
+            float click = Random.Range(-1f, 1f) * 0.4f * Mathf.Exp(-t * 80f);
+            float env = Mathf.Exp(-t * 30f);
+            d[i] = (sq + click) * env;
+        }
+        return Finish("sfx_turret", d);
     }
 
     static float[] Buffer(float duration) =>

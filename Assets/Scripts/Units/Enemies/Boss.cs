@@ -90,4 +90,32 @@ public class Boss : EnemyBase
             Instantiate(_minionPrefab, pos, Quaternion.identity);
         }
     }
+
+    [Header("Босс — награда за смерть")]
+    [SerializeField, Min(0)] private int _bonusXpShower = 24;
+    [SerializeField, Min(0)] private int _bossHealthOrbHeal = 50;
+
+    protected override void onObjectDeath()
+    {
+        // Ощутимый payoff за победу над боссом.
+        CyberpunkFX.SpawnExplosion(transform.position, 4f, CyberpunkFX.Magenta);
+        CyberpunkFX.Shockwave(transform.position, 5f, CyberpunkFX.Cyan);
+        CyberpunkFX.Shake(0.6f, 0.5f);
+        CyberpunkFX.HitStop(0.12f);
+        AudioFX.Explosion();
+
+        if (_xpOrbPrefab != null)
+        {
+            for (int i = 0; i < _bonusXpShower; i++)
+            {
+                Vector2 offset = Random.insideUnitCircle * 1.8f;
+                Instantiate(_xpOrbPrefab, transform.position + (Vector3)offset, Quaternion.identity);
+            }
+        }
+
+        if (_bossHealthOrbHeal > 0)
+            HealthOrb.Spawn(transform.position, _bossHealthOrbHeal);
+
+        base.onObjectDeath();
+    }
 }

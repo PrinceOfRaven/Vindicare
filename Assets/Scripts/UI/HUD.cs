@@ -62,9 +62,11 @@ public class HUD : MonoBehaviour
         public Image CooldownFill;
         public RectTransform Slot;
         public TMP_Text CooldownText;
+        public TMP_Text KeyText;
     }
 
     private readonly List<AbilitySlotUI> _abilitySlots = new List<AbilitySlotUI>();
+    private const float AbilityNameRow = 22f;
 
     // Босс-бар
     private RectTransform _bossBarRoot;
@@ -82,6 +84,11 @@ public class HUD : MonoBehaviour
 
     // Подсказка управления
     private TMP_Text _controlsHint;
+
+    // Тост о новом рекорде
+    private int _prevBestScore;
+    private bool _recordToastShown;
+    private TMP_Text _recordToast;
 
     private static Sprite _vignetteSprite;
     private static Sprite _solidSprite;
@@ -182,6 +189,16 @@ public class HUD : MonoBehaviour
         BuildBossBar(root);
         BuildComboText(root);
         BuildControlsHint(root);
+
+        _prevBestScore = RunRecords.BestScore;
+        _recordToast = CreateText("RecordToast", root,
+            anchor: new Vector2(0.5f, 0.5f), pivot: new Vector2(0.5f, 0.5f),
+            pos: new Vector2(0f, 120f), size: new Vector2(700f, 50f));
+        _recordToast.alignment = TextAlignmentOptions.Center;
+        _recordToast.fontSize = 40f;
+        _recordToast.text = "★ РЕКОРД ПОБИТ ★";
+        CyberpunkUI.StyleTMP(_recordToast, new Color(1f, 0.82f, 0.2f), Color.black, 0.3f);
+        _recordToast.alpha = 0f;
     }
 
     private void BuildBossBar(Transform root)
@@ -245,6 +262,38 @@ public class HUD : MonoBehaviour
             "<color=#73FF4D>F</color> Турель";
         CyberpunkUI.StyleTMP(_controlsHint, Color.white, Color.black, 0.25f);
         StartCoroutine(FadeControlsHint());
+    }
+
+    private IEnumerator ShowRecordToast()
+    {
+        AudioFX.LevelUp();
+        var rt = _recordToast.rectTransform;
+
+        // Появление с «панчем».
+        float t = 0f;
+        while (t < 0.35f)
+        {
+            t += Time.unscaledDeltaTime;
+            float k = Mathf.Clamp01(t / 0.35f);
+            _recordToast.alpha = k;
+            float s = Mathf.Lerp(1.6f, 1f, k);
+            rt.localScale = new Vector3(s, s, 1f);
+            yield return null;
+        }
+        _recordToast.alpha = 1f;
+        rt.localScale = Vector3.one;
+
+        yield return new WaitForSecondsRealtime(2f);
+
+        // Угасание.
+        t = 0f;
+        while (t < 0.8f)
+        {
+            t += Time.unscaledDeltaTime;
+            _recordToast.alpha = 1f - Mathf.Clamp01(t / 0.8f);
+            yield return null;
+        }
+        _recordToast.alpha = 0f;
     }
 
     private IEnumerator FadeControlsHint()
@@ -336,9 +385,10 @@ public class HUD : MonoBehaviour
         var canvas = GetComponentInParent<Canvas>();
         Transform root = canvas != null ? canvas.transform : transform;
 
-        const float slotSize = 56f;
-        const float gap = 8f;
+        const float slotSize = 58f;
+        const float gap = 14f;
         float total = abilities.Count * slotSize + (abilities.Count - 1) * gap;
+        float height = slotSize + AbilityNameRow;
 
         var container = new GameObject("AbilityBar", typeof(RectTransform));
         var crt = (RectTransform)container.transform;
@@ -346,8 +396,21 @@ public class HUD : MonoBehaviour
         crt.anchorMin = new Vector2(0.5f, 0f);
         crt.anchorMax = new Vector2(0.5f, 0f);
         crt.pivot     = new Vector2(0.5f, 0f);
-        crt.anchoredPosition = new Vector2(0f, 28f);
-        crt.sizeDelta = new Vector2(total, slotSize);
+        crt.anchoredPosition = new Vector2(0f, 26f);
+        crt.sizeDelta = new Vector2(total, height);
+
+        // Подложка-панель за всем хотбаром.
+        var backdrop = new GameObject("Backdrop", typeof(RectTransform), typeof(CanvasRenderer), typeof(Image));
+        var brt = (RectTransform)backdrop.transform;
+        brt.SetParent(crt, false);
+        brt.anchorMin = Vector2.zero;
+        brt.anchorMax = Vector2.one;
+        brt.offsetMin = new Vector2(-14f, -10f);
+        brt.offsetMax = new Vector2(14f, 10f);
+        var bimg = backdrop.GetComponent<Image>();
+        bimg.color = new Color(0.03f, 0.02f, 0.06f, 0.78f);
+        bimg.raycastTarget = false;
+        CyberpunkUI.AddNeonBorder(brt, new Color(0f, 0.7f, 1f) * 1.3f, 1.5f);
 
         for (int i = 0; i < abilities.Count; i++)
         {
@@ -380,66 +443,63 @@ public class HUD : MonoBehaviour
         var slot = new GameObject("Slot_" + ability.DisplayName, typeof(RectTransform), typeof(CanvasRenderer), typeof(Image));
         var srt = (RectTransform)slot.transform;
         srt.SetParent(parent, false);
-        srt.anchorMin = new Vector2(0f, 0.5f);
-        srt.anchorMax = new Vector2(0f, 0.5f);
-        srt.pivot     = new Vector2(0f, 0.5f);
-        srt.anchoredPosition = new Vector2(x, 0f);
+        srt.anchorMin = new Vector2(0f, 0f);
+        srt.anchorMax = new Vector2(0f, 0f);
+        srt.pivot     = new Vector2(0f, 0f);
+        srt.anchoredPosition = new Vector2(x, AbilityNameRow);
         srt.sizeDelta = new Vector2(slotSize, slotSize);
         var bg = slot.GetComponent<Image>();
-        bg.color = new Color(0.07f, 0.02f, 0.08f, 0.82f);
+        bg.color = new Color(0.06f, 0.02f, 0.09f, 0.88f);
         bg.raycastTarget = false;
 
-        var icon = AddSlotImage("Icon", srt, 8f);
-        if (ability.Icon != null)
-        {
-            icon.sprite = ability.Icon;
-            icon.color = Color.white;
-            icon.preserveAspect = true;
-        }
-        else
-        {
-            icon.sprite = CreateSolidSprite();
-            var c = ability.ThemeColor; c.a = 0.9f;
-            icon.color = c;
-        }
+        Color theme = ability.ThemeColor;
 
-        var cooldown = AddSlotImage("Cooldown", srt, 4f);
+        // Главный элемент — сама клавиша, крупно по центру (авторазмер под длину "SHIFT" и т.п.).
+        var key = CreateText("Key", srt,
+            anchor: new Vector2(0.5f, 0.5f), pivot: new Vector2(0.5f, 0.5f),
+            pos: Vector2.zero, size: new Vector2(slotSize - 8f, slotSize - 8f));
+        key.alignment = TextAlignmentOptions.Center;
+        key.enableAutoSizing = true;
+        key.fontSizeMin = 12f;
+        key.fontSizeMax = 30f;
+        key.text = ability.KeyLabel.ToUpperInvariant();
+        CyberpunkUI.StyleTMP(key, Color.white, Color.black, 0.25f);
+
+        // Радиальная заливка перезарядки поверх клавиши — затемняет её, пока не готова.
+        var cooldown = AddSlotImage("Cooldown", srt, 3f);
         cooldown.sprite = CreateSolidSprite();
-        cooldown.color = new Color(0f, 0f, 0f, 0.7f);
+        cooldown.color = new Color(0f, 0f, 0f, 0.72f);
         cooldown.type = Image.Type.Filled;
         cooldown.fillMethod = Image.FillMethod.Radial360;
         cooldown.fillOrigin = (int)Image.Origin360.Top;
         cooldown.fillClockwise = false;
         cooldown.fillAmount = 0f;
 
-        CyberpunkUI.AddNeonBorder(srt, ability.ThemeColor * 2.2f, 2f);
-
+        // Цифра обратного отсчёта — только во время перезарядки, поверх затемнения.
         var cdText = CreateText("CooldownText", srt,
             anchor: new Vector2(0.5f, 0.5f), pivot: new Vector2(0.5f, 0.5f),
             pos: Vector2.zero, size: new Vector2(slotSize, slotSize));
         cdText.alignment = TextAlignmentOptions.Center;
-        cdText.fontSize = 22f;
+        cdText.fontSize = 24f;
         cdText.text = string.Empty;
-        CyberpunkUI.StyleTMP(cdText, Color.white, Color.black, 0.25f);
+        CyberpunkUI.StyleTMP(cdText, theme, Color.black, 0.28f);
 
-        var key = CreateText("Key", srt,
-            anchor: new Vector2(1f, 0f), pivot: new Vector2(1f, 0f),
-            pos: new Vector2(-1f, 1f), size: new Vector2(34f, 16f));
-        key.alignment = TextAlignmentOptions.BottomRight;
-        key.fontSize = 13f;
-        key.text = ability.KeyLabel;
-        CyberpunkUI.StyleTMP(key, new Color(0f, 0.85f, 1f), Color.black, 0.22f);
+        CyberpunkUI.AddNeonBorder(srt, theme * 2.2f, 2f);
 
+        // Название способности — в строке под клавишей, читаемо и ярко.
         var nameLabel = CreateText("Name", srt,
-            anchor: new Vector2(0.5f, 1f), pivot: new Vector2(0.5f, 0f),
-            pos: new Vector2(0f, 3f), size: new Vector2(110f, 16f));
-        nameLabel.alignment = TextAlignmentOptions.Center;
-        nameLabel.fontSize = 12f;
+            anchor: new Vector2(0.5f, 0f), pivot: new Vector2(0.5f, 1f),
+            pos: new Vector2(0f, -3f), size: new Vector2(slotSize + 12f, AbilityNameRow - 2f));
+        nameLabel.alignment = TextAlignmentOptions.Midline;
+        nameLabel.enableAutoSizing = true;
+        nameLabel.fontSizeMin = 10f;
+        nameLabel.fontSizeMax = 14f;
+        nameLabel.characterSpacing = -2f;
         nameLabel.text = ability.DisplayName;
-        var nc = ability.ThemeColor; nc.a = 1f;
-        CyberpunkUI.StyleTMP(nameLabel, nc, Color.black, 0.22f);
+        Color nameColor = Color.Lerp(theme, Color.white, 0.45f);
+        CyberpunkUI.StyleTMP(nameLabel, nameColor, Color.black, 0.25f);
 
-        return new AbilitySlotUI { Ability = ability, CooldownFill = cooldown, Slot = srt, CooldownText = cdText };
+        return new AbilitySlotUI { Ability = ability, CooldownFill = cooldown, Slot = srt, CooldownText = cdText, KeyText = key };
     }
 
     private static Image AddSlotImage(string objName, Transform parent, float padding)
@@ -464,16 +524,21 @@ public class HUD : MonoBehaviour
             if (s.Ability == null || s.CooldownFill == null) continue;
 
             float rem = s.Ability.CooldownRemaining01;
+            bool ready = s.Ability.IsReady;
             s.CooldownFill.fillAmount = rem;
 
             if (s.CooldownText != null)
-                s.CooldownText.text = (!s.Ability.IsReady && rem > 0f)
+                s.CooldownText.text = (!ready && rem > 0f)
                     ? Mathf.CeilToInt(rem * AbilityCooldownSeconds(s.Ability)).ToString()
                     : string.Empty;
 
+            // Во время перезарядки показываем только цифру отсчёта, клавишу прячем.
+            if (s.KeyText != null)
+                s.KeyText.alpha = ready ? 1f : 0f;
+
             if (s.Slot != null)
             {
-                if (s.Ability.IsReady)
+                if (ready)
                 {
                     float pulse = 0.75f + 0.25f * Mathf.Sin(Time.unscaledTime * 5f);
                     CyberpunkUI.SetNeonBorderColor(s.Slot, s.Ability.ThemeColor * 2.2f * pulse);
@@ -746,6 +811,13 @@ public class HUD : MonoBehaviour
             int wave  = WaveSpawner.Instance != null ? WaveSpawner.Instance.WaveNumber : 0;
             _score = RunRecords.ComputeScore(_runTime, _kills, level, wave) + _comboBonus;
             _scoreText.text = $"ОЧКИ {_score}";
+
+            if (!_recordToastShown && _prevBestScore > 0 && _score > _prevBestScore)
+            {
+                _recordToastShown = true;
+                if (_recordToast != null && isActiveAndEnabled)
+                    StartCoroutine(ShowRecordToast());
+            }
         }
 
         if (_xpSlider != null)

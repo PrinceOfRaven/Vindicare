@@ -23,7 +23,7 @@ public class DashAbility : PlayerAbility
             : player.FacingDirection;
 
         player.Dash(dir, _dashSpeed, _dashDuration);
-        AudioFX.Pickup();
+        AudioFX.Dash();
         CyberpunkFX.Kick(dir, 0.18f);
     }
 }
