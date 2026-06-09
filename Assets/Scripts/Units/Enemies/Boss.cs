@@ -1,7 +1,34 @@
+using System.Collections.Generic;
 using UnityEngine;
 
 public class Boss : EnemyBase
 {
+    /// <summary>Все живые боссы на сцене (для верхней полосы HP на HUD).</summary>
+    public static readonly List<Boss> ActiveBosses = new List<Boss>();
+
+    /// <summary>Первый живой босс или null.</summary>
+    public static Boss Current
+    {
+        get
+        {
+            for (int i = ActiveBosses.Count - 1; i >= 0; i--)
+            {
+                if (ActiveBosses[i] == null || !ActiveBosses[i].IsAlive) ActiveBosses.RemoveAt(i);
+            }
+            return ActiveBosses.Count > 0 ? ActiveBosses[0] : null;
+        }
+    }
+
+    private void OnEnable()
+    {
+        if (!ActiveBosses.Contains(this)) ActiveBosses.Add(this);
+    }
+
+    private void OnDisable()
+    {
+        ActiveBosses.Remove(this);
+    }
+
     [Header("Босс — фазы")]
     [Range(0.05f, 0.95f)]
     [SerializeField] private float _phase2HealthFraction = 0.5f;

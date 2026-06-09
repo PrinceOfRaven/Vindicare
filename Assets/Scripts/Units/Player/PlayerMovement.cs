@@ -21,6 +21,29 @@ public class PlayerMovement : UnitsBase
     public SpriteRenderer BodySprite => _sr;
     public Vector2 MoveInput => _moveInput;
 
+    private float _dashEndTime;
+    private Vector2 _dashVelocity;
+    private float _invulnEndTime;
+
+    public bool IsDashing => Time.time < _dashEndTime;
+    public bool IsInvulnerable => Time.time < _invulnEndTime;
+
+    /// <summary>Делает игрока неуязвимым на указанное время (не сокращает уже идущую неуязвимость).</summary>
+    public void SetInvulnerable(float duration)
+    {
+        _invulnEndTime = Mathf.Max(_invulnEndTime, Time.time + duration);
+    }
+
+    /// <summary>Рывок в направлении dir на dur секунд со скоростью speed и кратким i-frame.</summary>
+    public void Dash(Vector2 dir, float speed, float dur)
+    {
+        if (dir.sqrMagnitude < 0.0001f) dir = FacingDirection;
+        _dashVelocity = dir.normalized * speed;
+        _dashEndTime = Time.time + dur;
+        SetInvulnerable(dur + 0.05f);
+        CyberpunkFX.SpawnDeathBurst(transform.position, CyberpunkFX.Cyan);
+    }
+
     protected override void Awake()
     {
         if (Instance != null)
@@ -106,6 +129,12 @@ public class PlayerMovement : UnitsBase
 
     private void FixedUpdate()
     {
+        if (IsDashing)
+        {
+            rb.linearVelocity = _dashVelocity;
+            return;
+        }
+
         float speedMult = PlayerStats.Instance != null
             ? PlayerStats.Instance.MoveSpeedMultiplier
             : 1f;
@@ -128,6 +157,7 @@ public class PlayerMovement : UnitsBase
     protected override void onObjectDeath()
     {
         RaiseDeath();
+        AudioFX.PlayerDeath();
         CyberpunkFX.SpawnDeathBurst(transform.position, CyberpunkFX.HotRed);
         CyberpunkFX.Shake(0.35f, 0.5f);
         if (GameOverUI.Instance != null)
@@ -138,6 +168,12 @@ public class PlayerMovement : UnitsBase
 
     public override bool TakeDamage(float amount)
     {
+        if (IsInvulnerable)
+        {
+            CyberpunkFX.SpawnHitSpark(transform.position, CyberpunkFX.Cyan);
+            return false;
+        }
+
         bool died = base.TakeDamage(amount);
         if (!died)
         {
@@ -153,5 +189,15 @@ public class PlayerMovement : UnitsBase
 
         if (GetComponent<PlayerWalkAnimation>() == null)
             gameObject.AddComponent<PlayerWalkAnimation>();
+
+        EnsureAbility<DashAbility>();
+        EnsureAbility<ShieldAbility>();
+        EnsureAbility<OverdriveAbility>();
+        EnsureAbility<TurretAbility>();
+    }
+
+    private void EnsureAbility<T>() where T : PlayerAbility
+    {
+        if (GetComponent<T>() == null) gameObject.AddComponent<T>();
     }
 }

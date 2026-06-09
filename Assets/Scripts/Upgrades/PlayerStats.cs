@@ -35,6 +35,37 @@ public class PlayerStats : MonoBehaviour
 
     public event Action OnStatsChanged;
 
+    private float _buffEndTime;
+    private float _buffDamage = 1f;
+    private float _buffFireRate = 1f;
+    private float _buffMoveSpeed = 1f;
+
+    /// <summary>Активен ли сейчас временный бафф (овердрайв).</summary>
+    public bool HasTempBuff => Time.time < _buffEndTime;
+
+    /// <summary>Накладывает временный бафф на duration секунд (множители поверх стаков апгрейдов).</summary>
+    public void ApplyTempBuff(float damageMul, float fireRateMul, float moveMul, float duration)
+    {
+        _buffDamage = damageMul;
+        _buffFireRate = fireRateMul;
+        _buffMoveSpeed = moveMul;
+        _buffEndTime = Time.time + duration;
+        OnStatsChanged?.Invoke();
+    }
+
+    private void Update()
+    {
+        if (!HasTempBuff && _buffDamage != 1f)
+        {
+            _buffDamage = _buffFireRate = _buffMoveSpeed = 1f;
+            OnStatsChanged?.Invoke();
+        }
+    }
+
+    private float BuffDamage   => HasTempBuff ? _buffDamage : 1f;
+    private float BuffFireRate => HasTempBuff ? _buffFireRate : 1f;
+    private float BuffMoveSpeed => HasTempBuff ? _buffMoveSpeed : 1f;
+
     private void Awake()
     {
         if (Instance != null && Instance != this) { Destroy(this); return; }
@@ -72,9 +103,9 @@ public class PlayerStats : MonoBehaviour
         OnStatsChanged?.Invoke();
     }
 
-    public float DamageMultiplier => 1f + _damagePerStack * GetStacks(UpgradeData.UpgradeType.Damage);
-    public float FireRateMultiplier => 1f + _fireRatePerStack * GetStacks(UpgradeData.UpgradeType.FireRate);
-    public float MoveSpeedMultiplier => 1f + _moveSpeedPerStack * GetStacks(UpgradeData.UpgradeType.MoveSpeed);
+    public float DamageMultiplier => (1f + _damagePerStack * GetStacks(UpgradeData.UpgradeType.Damage)) * BuffDamage;
+    public float FireRateMultiplier => (1f + _fireRatePerStack * GetStacks(UpgradeData.UpgradeType.FireRate)) * BuffFireRate;
+    public float MoveSpeedMultiplier => (1f + _moveSpeedPerStack * GetStacks(UpgradeData.UpgradeType.MoveSpeed)) * BuffMoveSpeed;
     public int MaxHealthBonus => _maxHealthPerStack * GetStacks(UpgradeData.UpgradeType.MaxHealth);
     public float PickupRadius => _basePickupRadius * (1f + _pickupRadiusPerStack * GetStacks(UpgradeData.UpgradeType.PickupRadius));
     public int ExtraProjectiles => _projectilesPerStack * GetStacks(UpgradeData.UpgradeType.ProjectileCount);

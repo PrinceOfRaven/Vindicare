@@ -69,6 +69,13 @@ public class WaveSpawner : MonoBehaviour
     public int CurrentWaveIndex => _currentWaveIndex;
 
     private int _waveNumber = 0;
+    private int _loopCount = 0;
+
+    /// <summary>Сквозной номер волны (растёт и при зацикливании).</summary>
+    public int WaveNumber => _waveNumber;
+
+    /// <summary>Сколько полных кругов волн пройдено (0 — первый круг).</summary>
+    public int LoopCount => _loopCount;
 
     private Transform Player =>
         PlayerMovement.Instance != null ? PlayerMovement.Instance.transform : null;
@@ -77,6 +84,7 @@ public class WaveSpawner : MonoBehaviour
     {
         if (Instance != null && Instance != this) { Destroy(this); return; }
         Instance = this;
+        RunDifficulty.Reset();
     }
 
     private void OnDestroy()
@@ -99,9 +107,13 @@ public class WaveSpawner : MonoBehaviour
 
         if (_initialDelay > 0f) yield return new WaitForSeconds(_initialDelay);
 
+        _loopCount = 0;
+
         int safety = 0;
         while (true)
         {
+            RunDifficulty.LoopCount = _loopCount;
+
             for (int i = 0; i < _waves.Count; i++)
             {
                 _currentWaveIndex = i;
@@ -114,6 +126,8 @@ public class WaveSpawner : MonoBehaviour
             }
 
             if (!_loopWaves) break;
+
+            _loopCount++;
 
             if (++safety > 10_000) yield break;
         }
@@ -146,14 +160,19 @@ public class WaveSpawner : MonoBehaviour
             yield break;
         }
 
+        // Группы из одного врага (босс/мини-босс) не размножаем — масштабируем только рои.
+        int total = group.count <= 1
+            ? group.count
+            : Mathf.Max(group.count, Mathf.RoundToInt(group.count * RunDifficulty.CountMultiplier));
+
         int spawned = 0;
-        while (spawned < group.count)
+        while (spawned < total)
         {
-            int batch = Mathf.Min(group.burstSize, group.count - spawned);
+            int batch = Mathf.Min(group.burstSize, total - spawned);
             for (int i = 0; i < batch; i++) SpawnOne(group.enemyPrefab);
             spawned += batch;
 
-            if (spawned < group.count)
+            if (spawned < total)
                 yield return new WaitForSeconds(group.spawnInterval);
         }
 

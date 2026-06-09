@@ -22,6 +22,24 @@ public abstract class EnemyBase : UnitsBase
         rb.gravityScale = 0f;
         rb.freezeRotation = true;
         CacheMaxHealth();
+        ApplyDifficulty();
+    }
+
+    /// <summary>
+    /// Масштабирует базовые характеристики врага под текущую сложность забега.
+    /// Вызывается в Awake до любых частных множителей (элита/босс),
+    /// чтобы те накладывались поверх.
+    /// </summary>
+    protected void ApplyDifficulty()
+    {
+        float hp = RunDifficulty.HealthMultiplier;
+        if (hp > 1f)
+        {
+            _maxHealth = Mathf.Max(1, Mathf.RoundToInt(_maxHealth * hp));
+            _health = _maxHealth;
+        }
+        _damage *= RunDifficulty.DamageMultiplier;
+        _speed *= RunDifficulty.SpeedMultiplier;
     }
 
     protected virtual void Start()

@@ -22,7 +22,10 @@ public class GameOverUI : MonoBehaviour
     [SerializeField] private string _mainMenuScene = "MainMenu";
 
     private TMP_Text _titleText;
+    private TMP_Text _scoreText;
     private bool _styled;
+
+    private static readonly Color GoldColor = new Color(1f, 0.82f, 0.2f);
 
     private void Awake()
     {
@@ -98,20 +101,22 @@ public class GameOverUI : MonoBehaviour
             _styled = true;
         }
 
-        if (PlayerLevel.Instance != null && _levelText != null)
-            _levelText.text = $"Уровень: {PlayerLevel.Instance.Level}";
+        float time  = HUD.Instance != null ? HUD.Instance.RunTime : 0f;
+        int   kills = HUD.Instance != null ? HUD.Instance.Kills : 0;
+        int   level = PlayerLevel.Instance != null ? PlayerLevel.Instance.Level : 0;
+        int   wave  = WaveSpawner.Instance != null ? WaveSpawner.Instance.WaveNumber : 0;
 
-        if (HUD.Instance != null)
-        {
-            if (_timeText != null)
-            {
-                int min = (int)(HUD.Instance.RunTime / 60);
-                int sec = (int)(HUD.Instance.RunTime % 60);
-                _timeText.text = $"Время: {min:00}:{sec:00}";
-            }
-            if (_killsText != null)
-                _killsText.text = $"Убито: {HUD.Instance.Kills}";
-        }
+        int score = HUD.Instance != null ? HUD.Instance.Score : RunRecords.ComputeScore(time, kills, level, wave);
+        var rec = RunRecords.Submit(time, kills, level, wave, score);
+
+        if (_levelText != null)
+            _levelText.text = $"Уровень: {level}" + RecordTag(rec.NewLevel, RunRecords.BestLevel.ToString());
+        if (_timeText != null)
+            _timeText.text  = $"Время: {RunRecords.FormatTime(time)}" + RecordTag(rec.NewTime, RunRecords.FormatTime(RunRecords.BestTime));
+        if (_killsText != null)
+            _killsText.text = $"Убито: {kills}" + RecordTag(rec.NewKills, RunRecords.BestKills.ToString());
+
+        ShowScore(rec);
 
         if (_titleText != null && isActiveAndEnabled)
             StartCoroutine(GlitchTitle());
@@ -138,6 +143,41 @@ public class GameOverUI : MonoBehaviour
         rt.anchoredPosition = basePos;
         _titleText.alpha = 1f;
         _titleText.color = baseColor;
+    }
+
+    private static string RecordTag(bool isNew, string best)
+        => isNew ? "   <color=#FFD23B>★ рекорд!</color>" : $"   <size=80%><alpha=#99>рекорд: {best}</size>";
+
+    private void ShowScore(RunRecords.Result rec)
+    {
+        EnsureScoreText();
+        if (_scoreText == null) return;
+
+        string suffix = rec.NewScore
+            ? "   <color=#FFD23B>★ НОВЫЙ РЕКОРД</color>"
+            : $"   <size=70%><alpha=#99>рекорд: {RunRecords.BestScore}</size>";
+        _scoreText.text = $"ОЧКИ: {rec.Score}{suffix}";
+    }
+
+    private void EnsureScoreText()
+    {
+        if (_scoreText != null || _content == null) return;
+
+        var go = new GameObject("ScoreText", typeof(RectTransform));
+        var rt = (RectTransform)go.transform;
+        rt.SetParent(_content.transform, false);
+        rt.SetAsFirstSibling();
+        rt.anchorMin = new Vector2(0.5f, 1f);
+        rt.anchorMax = new Vector2(0.5f, 1f);
+        rt.pivot     = new Vector2(0.5f, 1f);
+        rt.anchoredPosition = new Vector2(0f, -8f);
+        rt.sizeDelta = new Vector2(520f, 40f);
+
+        _scoreText = go.AddComponent<TextMeshProUGUI>();
+        _scoreText.alignment = TextAlignmentOptions.Center;
+        _scoreText.fontSize = 30f;
+        _scoreText.raycastTarget = false;
+        CyberpunkUI.StyleTMP(_scoreText, GoldColor, Color.black, 0.28f);
     }
 
     public void Restart()
